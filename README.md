@@ -1,6 +1,6 @@
 # TileDB
 
-[![Travis](https://travis-ci.org/TileDB-Inc/TileDB.svg?branch=master)](https://travis-ci.org/TileDB-Inc/TileDB)
+[![Travis](https://travis-ci.org/npapa/TileDB.svg?branch=master)](https://travis-ci.org/npapa/TileDB)
 
 The installation guide for TileDB can be found at this [Github
 Wiki](https://github.com/TileDB-Inc/TileDB/wiki).
