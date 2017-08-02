@@ -23,7 +23,7 @@ before_script:
     - lcov --directory $TRAVIS_BUILD_DIR/build --zerocounters
 
 script:
-    # make check-format
+    #- make check-format
     - make check
 
 after_success:
