@@ -157,8 +157,7 @@ int get_hosts(const char *fileName) {
     return 0;
 }
 
-TEST_CASE_METHOD(
-    LIBHDFS, "Test hdfs integration") {
+TEST_CASE(LIBHDFS, "Test hdfs integration") {
    totalSize=1000000000;
    check_hdfs_write("/tmp/testFile_rw",totalSize,4096);
    check_hdfs_read("/tmp/testFile_rw",4096);
