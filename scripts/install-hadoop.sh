@@ -110,8 +110,13 @@ function setup_environment {
   setup_hdfs_xml
 }
 
+function start-all {
+  sudo $HADOOP_HOME/bin/hdfs namenode -format
+  sudo $HADOOP_HOME/sbin/start-all.sh
+}
+
 update_apt_repo 
 install_java
 install_hadoop 
 setup_environment
-
+start-all
