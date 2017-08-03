@@ -12,7 +12,6 @@
 struct LibHDFSFx {
 
    static struct timeval tm1;
-   static off_t totalSize;
 
    static inline void start()
    {
@@ -165,10 +164,10 @@ int get_hosts(const char *fileName) {
 
     return 0;
 }
-}
+};
 
-TEST_CASE(LibHDFSFx, "Test hdfs integration") {
-   totalSize=1000000000;
+TEST_CASE_METHOD(LibHDFSFx, "Test hdfs integration") {
+   off_t totalSize=1000000000;
    check_hdfs_write("/tmp/testFile_rw",totalSize,4096);
    check_hdfs_read("/tmp/testFile_rw",4096);
 
