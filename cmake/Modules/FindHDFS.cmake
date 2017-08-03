@@ -30,7 +30,7 @@
 #   - HDFS_FOUND, whether HDFS has been found
 
 # Find header files  
-set(HDFS_INCLUDE_DIR /usr/local/hadoop/hadoop-2.7.2/include/hdfs.h)
+set(HDFS_INCLUDE_DIR /usr/local/hadoop/hadoop-2.7.2/include)
 set(HDFS_LIBRARIES /usr/local/hadoop/hadoop-2.7.2/lib/native/libhdfs.so)
 set(HDFS_FOUND TRUE)
 
