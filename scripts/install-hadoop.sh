@@ -2,7 +2,7 @@
 
 function update_apt_repo  {
   sudo apt-get purge -y openjdk*
-  sudo add-apt-repository ppa:webupd8team/java
+  sudo add-apt-repository -y ppa:webupd8team/java
   sudo apt-get update -y
 } 
 function install_java {
