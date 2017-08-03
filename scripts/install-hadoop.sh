@@ -127,12 +127,8 @@ function setup_environment {
 
 function start-all {
   sudo $HADOOP_HOME/bin/hdfs namenode -format
-  sudo ssh-keyscan -H 127.0.0.1 >> ~/.ssh/known_hosts
-  sudo ssh-keyscan -H localhost >> ~/.ssh/known_hosts
-  sudo ssh-keyscan -H 127.0.0.1 >> /home/hduser/.ssh/known_hosts
-  sudo ssh-keyscan -H localhost >> /home/hduser/.ssh/known_hosts
-  sudo ssh-keyscan -H 127.0.0.1 >> /home/hadoop/.ssh/known_hosts
-  sudo ssh-keyscan -H localhost >> /home/hadoop/.ssh/known_hosts
+  ssh-keyscan -H 127.0.0.1 >> ~/.ssh/known_hosts
+  ssh-keyscan -H localhost >> ~/.ssh/known_hosts
   sudo $HADOOP_HOME/sbin/start-dfs.sh
 }
 
