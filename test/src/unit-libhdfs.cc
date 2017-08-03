@@ -8,10 +8,9 @@
 #include <sys/time.h>
 
 static off_t totalSize;
+static struct timeval tm1;
 
 struct LibHDFSFx {
-
-   static struct timeval tm1;
 
    static inline void start()
    {
