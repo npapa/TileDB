@@ -142,3 +142,14 @@ create_hadoop_user
 install_hadoop 
 setup_environment
 start-all
+
+export JAVA_HOME=$(readlink -f \/usr\/bin\/java)
+echo "JAVA_HOME: " $JAVA_HOME
+export HADOOP_LIB="$HADOOP_HOME/lib/native/"
+echo "HADOOP_LIB: " $HADOOP_LIB
+export LD_LIBRARY_PATH="$HADOOP_LIB:$JAVA_HOME/jre/lib/amd64/server/"
+echo "LD_LIBRARY_PATH: " $LD_LIBRARY_PATH
+export CLASSPATH=`$HADOOP_HOME/bin/hadoop classpath --glob`
+echo "CLASSPATH: " $CLASSPATH
+
+
