@@ -8,28 +8,36 @@
 #include <sys/time.h>
 
 
-static struct timeval tm1;
-static off_t totalSize;
 
-static inline void start()
-{
-    gettimeofday(&tm1, NULL);
-}
+struct LibHDFSFx {
 
-static inline void stop()
-{
-    struct timeval tm2;
-    gettimeofday(&tm2, NULL);
+   static struct timeval tm1;
+   static off_t totalSize;
 
-    unsigned long long t = 1000000 * (tm2.tv_sec - tm1.tv_sec) + (tm2.tv_usec - tm1.tv_usec);
-    printf("Time: %llu us, MB/s:%f\n", t, (double)totalSize/(double)t);
-}
+   static inline void start()
+   {
+       gettimeofday(&tm1, NULL);
+   }
 
+   static inline void stop()
+   {
+       struct timeval tm2;
+       gettimeofday(&tm2, NULL);
 
-int check_hdfs_write(const char *writeFileName, off_t fileTotalSize, tSize bufferSize) {
-    hdfsFS fs;
-    hdfsFile writeFile;
-    char* buffer;
+       unsigned long long t = 1000000 * (tm2.tv_sec - tm1.tv_sec) + (tm2.tv_usec - tm1.tv_usec);
+       printf("Time: %llu us, MB/s:%f\n", t, (double)totalSize/(double)t);
+   }
+   
+   LibHDFSFx(){
+   }
+
+   ~LibHDFSFx(){
+   }
+
+   int check_hdfs_write(const char *writeFileName, off_t fileTotalSize, tSize bufferSize) {
+       hdfsFS fs;
+       hdfsFile writeFile;
+       char* buffer;
     int i;
     off_t nrRemaining;
     tSize curSize;
@@ -157,8 +165,9 @@ int get_hosts(const char *fileName) {
 
     return 0;
 }
+}
 
-TEST_CASE(LIBHDFS, "Test hdfs integration") {
+TEST_CASE(LibHDFSFx, "Test hdfs integration") {
    totalSize=1000000000;
    check_hdfs_write("/tmp/testFile_rw",totalSize,4096);
    check_hdfs_read("/tmp/testFile_rw",4096);
