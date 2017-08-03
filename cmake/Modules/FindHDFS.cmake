@@ -33,7 +33,7 @@
 if(HDFS_SEARCH_HEADER_PATHS)
   find_path( 
       HDFS_INCLUDE_DIR hdfs.h 
-      PATHS ${HDFS_SEARCH_HEADER_PATHS}   
+      PATHS ${HADOOP_HOME}/include   
       NO_DEFAULT_PATH
   )
 else()
@@ -44,7 +44,7 @@ endif()
 if(HDFS_SEARCH_LIB_PATH)
   find_library(
       HDFS_LIBRARIES NAMES hdfs
-      PATHS ${HDFS_SEARCH_LIB_PATH}$
+      PATHS ${HADOOP_HOME}/lib/native
       NO_DEFAULT_PATH
   )
 else()
