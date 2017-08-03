@@ -32,6 +32,7 @@
 # Find header files  
 set(HDFS_INCLUDE_DIR /usr/local/hadoop/hadoop-2.7.2/include)
 set(HDFS_LIBRARIES /usr/local/hadoop/hadoop-2.7.2/lib/native/libhdfs.so)
+set(JRE_LIBRARIES /usr/lib/jvm/java-8-oracle/jre/lib/amd64/server/libjvm.so)
 set(HDFS_FOUND TRUE)
 
 #if(HDFS_SEARCH_HEADER_PATHS)
