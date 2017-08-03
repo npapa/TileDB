@@ -1,25 +1,13 @@
 #!/bin/bash
 
-
-# Function for asking to proceed
-confirm () {
-  read -r -p "${1:-Are you sure? [y/N]} " response
-  case $response in
-    [yY][eE][sS]|[yY])
-      true
-      ;;
-     *)
-      false
-      ;;
-  esac
-}
 function update_apt_repo  {
+  sudo apt-get purge -y openjdk*
   sudo add-apt-repository ppa:webupd8team/java
-  sudo apt-get update 
+  sudo apt-get update -y
 } 
 function install_java {
-  sudo apt-get install oracle-java8-installer
-  sudo apt-get install oracle-java8-set-default
+  sudo apt-get install -y oracle-java8-installer
+  sudo apt-get install -y oracle-java8-set-default
 }
 
 function create_hadoop_user {
