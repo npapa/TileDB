@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-
+static off_t totalSize;
 
 struct LibHDFSFx {
 
@@ -167,7 +167,7 @@ int get_hosts(const char *fileName) {
 };
 
 TEST_CASE_METHOD(LibHDFSFx, "Test hdfs integration") {
-   off_t totalSize=1000000000;
+   totalSize=1000000000;
    check_hdfs_write("/tmp/testFile_rw",totalSize,4096);
    check_hdfs_read("/tmp/testFile_rw",4096);
 
