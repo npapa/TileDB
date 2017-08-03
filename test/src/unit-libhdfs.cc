@@ -1,3 +1,4 @@
+#include "catch.hpp"
 #include "hdfs.h"
 #include <limits.h>
 #include <stdio.h>
