@@ -11,6 +11,7 @@ install:
     # Install library dependencies
     - mkdir -p $TRAVIS_BUILD_DIR/build
     - sudo scripts/install-travis-deps.sh
+    - sudo scripts/install-hadoop.sh
     # Install lcov to coveralls conversion + upload tool
     - gem install coveralls-lcov
     # Build TileDB
