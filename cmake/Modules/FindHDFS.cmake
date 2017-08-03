@@ -30,33 +30,37 @@
 #   - HDFS_FOUND, whether HDFS has been found
 
 # Find header files  
-if(HDFS_SEARCH_HEADER_PATHS)
-  find_path( 
-      HDFS_INCLUDE_DIR hdfs.h 
-      PATHS ${HADOOP_HOME}/include   
-      NO_DEFAULT_PATH
-  )
-else()
-  find_path(HDFS_INCLUDE_DIR hdfs.h)
-endif()
+set(HDFS_INCLUDE_DIR /usr/local/hadoop/hadoop-2.7.2/include)
+set(HDFS_LIBRARIES /usr/local/hadoop/hadoop-2.7.2/lib/native)
+set(HDFS_FOUND TRUE)
+
+#if(HDFS_SEARCH_HEADER_PATHS)
+#  find_path( 
+#      HDFS_INCLUDE_DIR hdfs.h 
+#      PATHS ${HADOOP_HOME}/include   
+#      NO_DEFAULT_PATH
+#  )
+#else()
+#  find_path(HDFS_INCLUDE_DIR hdfs.h)
+#endif()
 
 # Find library
-if(HDFS_SEARCH_LIB_PATH)
-  find_library(
-      HDFS_LIBRARIES NAMES hdfs
-      PATHS ${HADOOP_HOME}/lib/native
-      NO_DEFAULT_PATH
-  )
-else()
-  find_library(HDFS_LIBRARIES NAMES hdfs)
-endif()
+#if(HDFS_SEARCH_LIB_PATH)
+#  find_library(
+#      HDFS_LIBRARIES NAMES hdfs
+#      PATHS ${HADOOP_HOME}/lib/native
+#      NO_DEFAULT_PATH
+#  )
+#else()
+#  find_library(HDFS_LIBRARIES NAMES hdfs)
+#endif()
 
-if(HDFS_INCLUDE_DIR AND HDFS_LIBRARIES)
+#if(HDFS_INCLUDE_DIR AND HDFS_LIBRARIES)
   message(STATUS "Found HDFS: ${HDFS_LIBRARIES}")
-  set(HDFS_FOUND TRUE)
-else()
-  set(HDFS_FOUND FALSE)
-endif()
+#  set(HDFS_FOUND TRUE)
+#else()
+#  set(HDFS_FOUND FALSE)
+#endif()
 
 if(HDFS_FIND_REQUIRED AND NOT HDFS_FOUND)
   message(FATAL_ERROR "Could not find the HDFS native library.")
