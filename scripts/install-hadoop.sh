@@ -10,26 +10,16 @@ function install_java {
   sudo apt-get install -y oracle-java8-set-default
 }
 
-function create_hadoop_user {
-
-  sudo useradd -m hduser
-  sudo adduser hduser sudo
-  sudo chsh -s /bin/bash hduser
-  sudo passwd hduser
-  
-}
 function install_hadoop {
   sudo mkdir -p /usr/local/hadoop/
   cd /usr/local/hadoop
   sudo curl http://ftp.tc.edu.tw/pub/Apache/hadoop/common/hadoop-2.7.2/hadoop-2.7.2.tar.gz | sudo tar xz 
-  sudo chown -R hadoop /usr/local/hadoop
 }
 
 function setup_profile {
   local file=/etc/profile.d/hadoop-init.sh
   local tempfile=/tmp/hadoop_setup_sdfds.sh
   sudo mkdir -p /tmp/hadoop
-  sudo chown hduser -R /tmp/hadoop
   export HADOOP_HOME=/usr/local/hadoop/hadoop-2.7.2
   export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
   cat >> $tempfile  <<EOT
@@ -118,12 +108,10 @@ function setup_environment {
   setup_core_xml
   setup_mapred_xml
   setup_hdfs_xml
-  sudo chown -R hduser $HADOOP_HOME
 }
 
 update_apt_repo 
 install_java
-create_hadoop_user
 install_hadoop 
 setup_environment
 
