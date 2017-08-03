@@ -6,7 +6,7 @@ env:
     matrix:
         - USE_MPI="ON"
         - USE_MPI="OFF"
-
+	- USE_HDFS="ON"
 install:
     # Install library dependencies
     - mkdir -p $TRAVIS_BUILD_DIR/build
