@@ -14,12 +14,26 @@ function install_hadoop {
   sudo mkdir -p /usr/local/hadoop/
   cd /usr/local/hadoop
   sudo curl http://ftp.tc.edu.tw/pub/Apache/hadoop/common/hadoop-2.7.2/hadoop-2.7.2.tar.gz | sudo tar xz 
+  sudo chown -R hadoop /usr/local/hadoop
+}
+
+function create_hadoop_user {
+  sudo useradd -m hduser
+  sudo adduser hduser sudo
+  sudo chsh -s /bin/bash hduser
+  echo -e "hduser123\nhduser123\n" | sudo passwd hduser
+
+  sudo useradd -m hadoop
+  sudo adduser hadoop sudo
+  sudo chsh -s /bin/bash hadoop
+  echo -e "hadoop123\nhadoop123\n" | sudo passwd hadoop
 }
 
 function setup_profile {
   local file=/etc/profile.d/hadoop-init.sh
   local tempfile=/tmp/hadoop_setup_sdfds.sh
   sudo mkdir -p /tmp/hadoop
+  sudo chown hduser -R /tmp/hadoop
   export HADOOP_HOME=/usr/local/hadoop/hadoop-2.7.2
   export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
   cat >> $tempfile  <<EOT
@@ -108,17 +122,23 @@ function setup_environment {
   setup_core_xml
   setup_mapred_xml
   setup_hdfs_xml
+  sudo chown -R hduser $HADOOP_HOME
 }
 
 function start-all {
   sudo $HADOOP_HOME/bin/hdfs namenode -format
   sudo ssh-keyscan -H 127.0.0.1 >> ~/.ssh/known_hosts
   sudo ssh-keyscan -H localhost >> ~/.ssh/known_hosts
+  sudo ssh-keyscan -H 127.0.0.1 >> /home/hduser/.ssh/known_hosts
+  sudo ssh-keyscan -H localhost >> /home/hduser/.ssh/known_hosts
+  sudo ssh-keyscan -H 127.0.0.1 >> /home/hadoop/.ssh/known_hosts
+  sudo ssh-keyscan -H localhost >> /home/hadoop/.ssh/known_hosts
   sudo $HADOOP_HOME/sbin/start-dfs.sh
 }
 
 update_apt_repo 
 install_java
+create_hadoop_user
 install_hadoop 
 setup_environment
 start-all
