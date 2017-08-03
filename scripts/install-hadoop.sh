@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # Function for asking to proceed
 confirm () {
   read -r -p "${1:-Are you sure? [y/N]} " response
