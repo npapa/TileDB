@@ -128,7 +128,7 @@ function setup_environment {
 function start-all {
   sudo $HADOOP_HOME/bin/hdfs namenode -format
   sudo mkdir /root/.ssh
-  sudo ssh-keygen -t rsa -P "" -f /root/.ssh/id_dsa
+  sudo ssh-keygen -t rsa -P "" -f /root/.ssh/id_rsa
   sudo cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
   ssh-keyscan -H 127.0.0.1 >> /root/.ssh/known_hosts
   ssh-keyscan -H localhost >> /root/.ssh/known_hosts
