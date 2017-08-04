@@ -167,18 +167,18 @@ int get_hosts(const char *fileName) {
 
 TEST_CASE_METHOD(LibHDFSFx, "Test hdfs integration") {
    totalSize=1000000000;
-   check_hdfs_write("/tmp/testFile_rw",totalSize,4096);
-   check_hdfs_read("/tmp/testFile_rw",4096);
+   check_hdfs_write("testFile_rw",totalSize,4096);
+   check_hdfs_read("testFile_rw",4096);
 
-   check_hdfs_write("/tmp/testFile_rw",totalSize,1048576);
-   check_hdfs_read("/tmp/testFile_rw",1048576);
+   check_hdfs_write("testFile_rw",totalSize,1048576);
+   check_hdfs_read("testFile_rw",1048576);
 
-   check_hdfs_write("/tmp/testFile_rw",totalSize,10485760);
-   check_hdfs_read("/tmp/testFile_rw",10485760);
+   check_hdfs_write("testFile_rw",totalSize,10485760);
+   check_hdfs_read("testFile_rw",10485760);
 
-   check_hdfs_write("/tmp/testFile_rw",totalSize,104857600);
-   check_hdfs_read("/tmp/testFile_rw",104857600);
+   check_hdfs_write("testFile_rw",totalSize,104857600);
+   check_hdfs_read("testFile_rw",104857600);
 
-   get_hosts("/tmp/testFile_rw");
+   get_hosts("testFile_rw");
 }
 
