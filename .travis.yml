@@ -35,7 +35,7 @@ script:
     - echo $LD_LIBRARY_PATH
     - export CLASSPATH=`$HADOOP_HOME/bin/hadoop classpath --glob`
     - echo $CLASSPATH
-    - make check
+    - sudo make check
 
 after_success:
     - cd $TILEDB_BUILD_DIR/build
