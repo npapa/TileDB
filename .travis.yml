@@ -26,7 +26,7 @@ before_script:
 script:
     #- make check-format
     - export HADOOP_HOME=/usr/local/hadoop/hadoop-2.7.2/
-    - echo "JHADOOP_HOME: " $HADOOP_HOME
+    - echo "HADOOP_HOME: " $HADOOP_HOME
     - export JAVA_HOME=$(readlink -n \/etc\/alternatives\/java | sed "s:\/jre\/bin\/java::")
     - echo "JAVA_HOME: " $JAVA_HOME
     - export HADOOP_LIB="$HADOOP_HOME/lib/native/"
