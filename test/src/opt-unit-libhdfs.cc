@@ -167,7 +167,7 @@ int get_hosts(const char *fileName) {
 
 TEST_CASE_METHOD(LibHDFSFx, "Test hdfs integration") {
 //   totalSize=1000000000;
-   totalsize=4096;
+   totalSize=4096;
    check_hdfs_write("testFile_rw",totalSize,4096);
    check_hdfs_read("testFile_rw",4096);
 
