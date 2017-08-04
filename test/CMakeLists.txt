@@ -47,7 +47,7 @@ target_include_directories(
 # Gather the test source files
 if(USE_HDFS)
 	file(GLOB_RECURSE TILEDB_TEST_SOURCES "src/unit-*.cc" "src/opt-unit-*.cc")
-else
+else()
 	file(GLOB_RECURSE TILEDB_TEST_SOURCES "src/unit-*.cc")
 endif()
 
