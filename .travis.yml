@@ -25,6 +25,9 @@ before_script:
 
 script:
     #- make check-format
+    - echo "HADOOP_HOME= " $HADOOP_HOME
+    - export CLASSPATH=`$HADOOP_HOME/bin/hadoop classpath --glob`
+    - echo "CLASSPATH= " $CLASSPATH
     - make check
 
 after_success:
