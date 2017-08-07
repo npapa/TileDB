@@ -13,7 +13,7 @@ function install_java {
 function install_hadoop {
   sudo mkdir -p /usr/local/hadoop/
   cd /usr/local/hadoop
-  sudo curl http://apache.forthnet.gr/hadoop/common/hadoop-2.8.1/hadoop-2.8.1.tar.gz | sudo tar xz 
+  sudo curl http://apache.forthnet.gr/hadoop/common/hadoop-3.0.0-alpha4/hadoop-3.0.0-alpha4.tar.gz | sudo tar xz 
   sudo mv hadoop-2.8.1 home
   sudo chown -R hadoop /usr/local/hadoop
 }
