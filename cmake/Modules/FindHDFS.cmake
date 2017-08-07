@@ -69,10 +69,10 @@ if (NOT HDFS_FOUND)
     message(STATUS "Found HDFS libraries: ${HDFS_LIBRARIES}")
     message(STATUS "Found HDFS include: ${HDFS_INCLUDE_DIR}")
 
-  if("${HDFS_INCLUDE_DIR}" STREQUAL "" OR "${HDFS_LIBRARIES}" STREQUAL "" OR "${JVM_LIBRARIES}" STREQUAL "")
-    message(STATUS "Found JVM libraries: ${JVM_LIBRARIES}")
-    message(STATUS "Found HDFS libraries: ${HDFS_LIBRARIES}")
-    message(STATUS "Found HDFS include: ${HDFS_INCLUDE_DIR}")
+  if(JVM_LIBRARIES AND HDFS_LIBRARIES AND HDFS_INCLUDE_DIR)
+    message(STATUS "Found! JVM libraries: ${JVM_LIBRARIES}")
+    message(STATUS "Found! HDFS libraries: ${HDFS_LIBRARIES}")
+    message(STATUS "Found! HDFS include: ${HDFS_INCLUDE_DIR}")
     set(HDFS_FOUND TRUE)
   else()
     set(HDFS_FOUND FALSE)
@@ -80,7 +80,6 @@ if (NOT HDFS_FOUND)
 ENDIF()
 
 
-
-if(NOT HDFS_FOUND)
+if(HDFS_FIND_REQUIRED AND NOT HDFS_FOUND)
   message(FATAL_ERROR "Could not find the HDFS native library.")
 endif()
