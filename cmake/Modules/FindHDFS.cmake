@@ -43,7 +43,7 @@ if (NOT HDFS_FOUND)
 
   MESSAGE("--  Exploring these paths to find libjvm: ${POSSILE_PATHS_JVM}.")
 
-  FIND_PATH (JRE_LIBRARIES NAMES libjvm.so PATHS ${POSSILE_PATHS_JVM} NO_DEFAULT_PATH)
+  FIND_FILE (JRE_LIBRARIES NAMES libjvm.so PATHS ${POSSILE_PATHS_JVM} NO_DEFAULT_PATH)
 
 
   MESSAGE("-- Searching for libhdfs")
