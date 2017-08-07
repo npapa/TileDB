@@ -32,13 +32,14 @@
 find_package(JNI)
 
 if (NOT HDFS_FOUND)
-  SET (libhdfs_libs "libhdfs")
 
   MESSAGE("-- Searching for libhdfs")
   IF ( "${HADOOP_HOME}" STREQUAL "" )
      MESSAGE("---HADOOP_HOME not specified")
   ELSE ()
      LIST (APPEND POSSILE_PATHS
+          "${HADOOP_HOME}"
+          "${HADOOP_HOME}/lib"
           "${HADOOP_HOME}/lib/native"
           "${HADOOP_HOME}/include"
         )
@@ -47,8 +48,10 @@ if (NOT HDFS_FOUND)
   MESSAGE("--  Exploring these paths to find libhdfs and hdfs.h: ${POSSILE_PATHS}.")
 
   FIND_PATH (HDFS_INCLUDE_DIR NAMES hdfs.h PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
-  FIND_LIBRARY (HDFS_LIBRARIES NAMES ${libhdfs_libs} PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
+  FIND_LIBRARY (HDFS_LIBRARIES NAMES libhdfs PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
 
+    message(STATUS " HDFS libraries: ${HDFS_LIBRARIES}")
+    message(STATUS " HDFS include: ${HDFS_INCLUDE_DIR}")
   if(HDFS_INCLUDE_DIR AND HDFS_LIBRARIES)
     message(STATUS "Found HDFS libraries: ${HDFS_LIBRARIES}")
     message(STATUS "Found HDFS include: ${HDFS_INCLUDE_DIR}")
