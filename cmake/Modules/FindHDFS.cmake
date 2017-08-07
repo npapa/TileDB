@@ -81,6 +81,6 @@ ENDIF()
 
 
 
-if(HDFS_FIND_REQUIRED AND NOT HDFS_FOUND)
+if(NOT HDFS_FOUND)
   message(FATAL_ERROR "Could not find the HDFS native library.")
 endif()
