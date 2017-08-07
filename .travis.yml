@@ -14,11 +14,10 @@ install:
     - mkdir -p $TRAVIS_BUILD_DIR/build
     - if [ "$USE_HDFS" == "ON" ]; then sudo -E scripts/install-hadoop.sh; fi
     - sudo scripts/install-travis-deps.sh
-    - if [ "$USE_HDFS" == "ON" ]; then scripts/hadoop-env-variables.sh; fi
+    - if [ "$USE_HDFS" == "ON" ]; then source scripts/hadoop-env-variables.sh; fi
     # Install lcov to coveralls conversion + upload tool
     - gem install coveralls-lcov
     # Build TileDB
-    - if [ "$USE_HDFS" == "ON" ]; then scripts/hadoop-env-variables.sh; fi
     - cd $TRAVIS_BUILD_DIR/build
     - cmake -DCMAKE_BUILD_TYPE=Coverage  -DTILEDB_VERBOSE=1 -DUSE_MPI=$USE_MPI -DUSE_HDFS=$USE_HDFS -DJAVA_HOME=$JAVA_HOME  -DHADOOP_HOME=$HADOOP_HOME ..
     - make -j4
@@ -29,7 +28,7 @@ before_script:
 
 script:
     #- make check-format
-    - if [ "$USE_HDFS" == "ON" ]; then scripts/hadoop-env-variables.sh; fi
+    - if [ "$USE_HDFS" == "ON" ]; then source scripts/hadoop-env-variables.sh; fi
     - make check
 
 after_success:
