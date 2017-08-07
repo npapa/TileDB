@@ -28,7 +28,7 @@ before_script:
 
 script:
     #- make check-format
-    - if [ "$USE_HDFS" == "ON" ]; then source scripts/hadoop-env-variables.sh; fi
+    #- if [ "$USE_HDFS" == "ON" ]; then source scripts/hadoop-env-variables.sh; fi
     - sudo make check
 
 after_success:
