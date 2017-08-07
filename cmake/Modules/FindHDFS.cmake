@@ -69,7 +69,7 @@ if (NOT HDFS_FOUND)
     message(STATUS "Found HDFS libraries: ${HDFS_LIBRARIES}")
     message(STATUS "Found HDFS include: ${HDFS_INCLUDE_DIR}")
 
-  if(HDFS_INCLUDE_DIR AND HDFS_LIBRARIES AND JVM_LIBRARIES)
+  if("${HDFS_INCLUDE_DIR}" STREQUAL "" OR "${HDFS_LIBRARIES}" STREQUAL "" OR "${JVM_LIBRARIES}" STREQUAL "")
     message(STATUS "Found JVM libraries: ${JVM_LIBRARIES}")
     message(STATUS "Found HDFS libraries: ${HDFS_LIBRARIES}")
     message(STATUS "Found HDFS include: ${HDFS_INCLUDE_DIR}")
