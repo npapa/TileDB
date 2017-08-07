@@ -14,7 +14,7 @@ function install_hadoop {
   sudo mkdir -p /usr/local/hadoop/
   cd /usr/local/hadoop
   sudo curl http://apache.forthnet.gr/hadoop/common/hadoop-2.8.1/hadoop-2.8.1.tar.gz | sudo tar xz 
-  sudo mv hadoop-2.8.1 hadoop
+  sudo mv hadoop-2.8.1 home
   #sudo curl http://ftp.tc.edu.tw/pub/Apache/hadoop/common/hadoop-2.7.2/hadoop-2.7.2.tar.gz | sudo tar xz 
   sudo chown -R hadoop /usr/local/hadoop
 }
@@ -36,10 +36,10 @@ function setup_profile {
   local tempfile=/tmp/hadoop_setup_sdfds.sh
   sudo mkdir -p /tmp/hadoop
   sudo chown hduser -R /tmp/hadoop
-  export HADOOP_HOME=/usr/local/hadoop/hadoop
+  export HADOOP_HOME=/usr/local/hadoop/home
   export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
   cat >> $tempfile  <<EOT
-export HADOOP_HOME=/usr/local/hadoop/hadoop
+export HADOOP_HOME=/usr/local/hadoop/home
 export PATH=\$PATH:\$HADOOP_HOME/bin:\$HADOOP_HOME/sbin
 EOT
   tempfile=/tmp/hadoop_setup_sdfds.sh
@@ -49,7 +49,7 @@ EOT
 }
 
 function setup_core_xml {
-  export HADOOP_HOME=/usr/local/hadoop/hadoop
+  export HADOOP_HOME=/usr/local/hadoop/home
   local tmpfile=/tmp/hadoop_fafsa.xml
   local file=$HADOOP_HOME/etc/hadoop/core-site.xml
   sudo rm -rf $file
@@ -75,7 +75,7 @@ EOF
 }
 
 function setup_mapred_xml {
-  export HADOOP_HOME=/usr/local/hadoop/hadoop
+  export HADOOP_HOME=/usr/local/hadoop/home
   local tmpfile=/tmp/hadoop_mapred.xml
   local file=$HADOOP_HOME/etc/hadoop/mapred-site.xml
   sudo rm -rf $file
@@ -96,7 +96,7 @@ EOT
 }
 
 function setup_hdfs_xml {
-  export HADOOP_HOME=/usr/local/hadoop/hadoop
+  export HADOOP_HOME=/usr/local/hadoop/home
   local tmpfile=/tmp/hadoop_hdfs.xml
   local file=$HADOOP_HOME/etc/hadoop/hdfs-site.xml
   sudo rm -rf $file
@@ -118,7 +118,7 @@ EOF
 
 
 function setup_environment {
-  export HADOOP_HOME=/usr/local/hadoop/hadoop
+  export HADOOP_HOME=/usr/local/hadoop/home
   sudo sed -i -- 's/JAVA_HOME=\${JAVA_HOME}/JAVA_HOME=\$(readlink -f \/usr\/bin\/java | sed "s:bin\/java::")/' $HADOOP_HOME/etc/hadoop/hadoop-env.sh
   setup_profile
   setup_core_xml
