@@ -49,21 +49,13 @@ if (NOT HDFS_FOUND)
   FIND_PATH (HDFS_INCLUDE_DIR NAMES hdfs.h PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
   FIND_LIBRARY (HDFS_LIBRARIES NAMES ${libhdfs_libs} PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
 
-
-
-
-  IF (HDFS_FOUND)
-     MESSAGE ("---LIBHDFS ${HDFS_LIBRARIES} found.")
-  ELSE()
-     MESSAGE ("---LIBHDFS library not found.")
-  ENDIF()
-
-  IF (HDFS_INCLUDE_DIR)
-     MESSAGE ("---LIBHDFS ${HDFS_INCLUDE_DIR} found.")
-  ELSE()
-     MESSAGE ("---HDFS header not found.")
-  ENDIF()
-
+  if(HDFS_INCLUDE_DIR AND HDFS_LIBRARIES)
+    message(STATUS "Found HDFS libraries: ${HDFS_LIBRARIES}")
+    message(STATUS "Found HDFS include: ${HDFS_INCLUDE_DIR}")
+    set(HDFS_FOUND TRUE)
+  else()
+    set(HDFS_FOUND FALSE)
+  endif()
 ENDIF()
 
 
@@ -100,12 +92,7 @@ ENDIF()
 #  find_library(HDFS_LIBRARIES NAMES hdfs)
 #endif()
 
-#if(HDFS_INCLUDE_DIR AND HDFS_LIBRARIES)
-  message(STATUS "Found HDFS: ${HDFS_LIBRARIES}")
-#  set(HDFS_FOUND TRUE)
-#else()
-#  set(HDFS_FOUND FALSE)
-#endif()
+
 
 if(HDFS_FIND_REQUIRED AND NOT HDFS_FOUND)
   message(FATAL_ERROR "Could not find the HDFS native library.")
