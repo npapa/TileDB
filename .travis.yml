@@ -18,7 +18,8 @@ install:
     - gem install coveralls-lcov
     # Build TileDB
     - cd $TRAVIS_BUILD_DIR/build
-    - sudo cmake -DCMAKE_BUILD_TYPE=Coverage  -DTILEDB_VERBOSE=1 -DUSE_MPI=$USE_MPI -DUSE_HDFS=$USE_HDFS -DJAVA_HOME=$JAVA_HOME  -DHADOOP_HOME=$HADOOP_HOME ..
+    - if [ "$USE_HDFS" == "ON" ]; then scripts/hadoop-env-variables.sh; fi
+    - cmake -DCMAKE_BUILD_TYPE=Coverage  -DTILEDB_VERBOSE=1 -DUSE_MPI=$USE_MPI -DUSE_HDFS=$USE_HDFS -DJAVA_HOME=$JAVA_HOME  -DHADOOP_HOME=$HADOOP_HOME ..
     - make -j4
     - make examples -j4
     
@@ -27,8 +28,8 @@ before_script:
 
 script:
     #- make check-format
-    - if [ "$USE_HDFS" == "ON" ]; then sudo -E scripts/hadoop-env-variables.sh; fi
-    - sudo make check
+    - if [ "$USE_HDFS" == "ON" ]; then scripts/hadoop-env-variables.sh; fi
+    - make check
 
 after_success:
     - cd $TILEDB_BUILD_DIR/build
