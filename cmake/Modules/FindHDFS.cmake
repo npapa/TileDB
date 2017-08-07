@@ -27,6 +27,7 @@
 # Finds the HDFS native library. This module defines:
 #   - HDFS_INCLUDE_DIR, directory containing headers
 #   - HDFS_LIBRARIES, the HDFS library path
+#   - JVM_LIBRARIES, the JVM library path
 #   - HDFS_FOUND, whether HDFS has been found
 
 
@@ -43,7 +44,7 @@ if (NOT HDFS_FOUND)
 
   MESSAGE("--  Exploring these paths to find libjvm: ${POSSILE_PATHS_JVM}.")
 
-  FIND_FILE (JRE_LIBRARIES NAMES libjvm.so PATHS ${POSSILE_PATHS_JVM} NO_DEFAULT_PATH)
+  FIND_FILE (JVM_LIBRARIES NAMES libjvm.so PATHS ${POSSILE_PATHS_JVM} NO_DEFAULT_PATH)
 
 
   MESSAGE("-- Searching for libhdfs")
@@ -64,12 +65,12 @@ if (NOT HDFS_FOUND)
   FIND_LIBRARY (HDFS_LIBRARIES NAMES hdfs PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
 
 
-    message(STATUS "Found JVM libraries: ${JRE_LIBRARIES}")
+    message(STATUS "Found JVM libraries: ${JVM_LIBRARIES}")
     message(STATUS "Found HDFS libraries: ${HDFS_LIBRARIES}")
     message(STATUS "Found HDFS include: ${HDFS_INCLUDE_DIR}")
 
-  if(HDFS_INCLUDE_DIR AND HDFS_LIBRARIES AND JRE_LIBRARIES)
-    message(STATUS "Found JVM libraries: ${JRE_LIBRARIES}")
+  if(HDFS_INCLUDE_DIR AND HDFS_LIBRARIES AND JVM_LIBRARIES)
+    message(STATUS "Found JVM libraries: ${JVM_LIBRARIES}")
     message(STATUS "Found HDFS libraries: ${HDFS_LIBRARIES}")
     message(STATUS "Found HDFS include: ${HDFS_INCLUDE_DIR}")
     set(HDFS_FOUND TRUE)
@@ -77,40 +78,6 @@ if (NOT HDFS_FOUND)
     set(HDFS_FOUND FALSE)
   endif()
 ENDIF()
-
-
-
-
-# Find header files  
-#set(HDFS_INCLUDE_DIR /usr/local/hadoop/hadoop-2.7.2/include)
-#set(HDFS_LIBRARIES /usr/local/hadoop/hadoop-2.7.2/lib/native/libhdfs.so)
-#set(JRE_LIBRARIES /usr/lib/jvm/java-8-oracle/jre/lib/amd64/server/libjvm.so)
-
-#set(HDFS_INCLUDE_DIR HADOOP_HOME/include)
-#set(HDFS_LIBRARIES HADOOP_HOME/lib/native/libhdfs.so)
-#set(JRE_LIBRARIES JAVA_HOME/lib/amd64/server/libjvm.so)
-#set(HDFS_FOUND TRUE)
-
-#if(HDFS_SEARCH_HEADER_PATHS)
-#  find_path( 
-#      HDFS_INCLUDE_DIR hdfs.h 
-#      PATHS ${HADOOP_HOME}/include   
-#      NO_DEFAULT_PATH
-#  )
-#else()
-#  find_path(HDFS_INCLUDE_DIR hdfs.h)
-#endif()
-
-# Find library
-#if(HDFS_SEARCH_LIB_PATH)
-#  find_library(
-#      HDFS_LIBRARIES NAMES hdfs
-#      PATHS ${HADOOP_HOME}/lib/native
-#      NO_DEFAULT_PATH
-#  )
-#else()
-#  find_library(HDFS_LIBRARIES NAMES hdfs)
-#endif()
 
 
 
