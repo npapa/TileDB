@@ -4,10 +4,10 @@ sudo: required
 dist: trusty
 env:
     matrix:
-        - USE_HDFS="ON"
-        - USE_HDFS="OFF"
-        - USE_MPI="ON"
-        - USE_MPI="OFF"
+        - USE_HDFS="ON" USE_MPI="ON"
+        - USE_HDFS="ON" USE_MPI="OFF"
+        - USE_HDFS="OFF" USE_MPI="ON"
+        - USE_HDFS="OFF" USE_MPI="OFF"
 
 install:
     # Install library dependencies
