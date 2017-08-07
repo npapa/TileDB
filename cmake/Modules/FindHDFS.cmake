@@ -29,9 +29,22 @@
 #   - HDFS_LIBRARIES, the HDFS library path
 #   - HDFS_FOUND, whether HDFS has been found
 
-find_package(JNI)
 
 if (NOT HDFS_FOUND)
+  MESSAGE("-- Searching for jvm")
+  IF ( "${JAVA_HOME}" STREQUAL "" )
+     MESSAGE("---JAVA_HOME not specified")
+  ELSE ()
+     LIST (APPEND POSSILE_PATHS_JVM
+          "${JAVA_HOME}"
+          "${JAVA_HOME}/lib/amd64/server/"
+        )
+  ENDIF()
+
+  MESSAGE("--  Exploring these paths to find libjvm: ${POSSILE_PATHS_JVM}.")
+
+  FIND_LIBRARY (JRE_LIBRARIES NAMES jvm PATHS ${POSSILE_PATHS_JVM} NO_DEFAULT_PATH)
+
 
   MESSAGE("-- Searching for libhdfs")
   IF ( "${HADOOP_HOME}" STREQUAL "" )
@@ -50,9 +63,8 @@ if (NOT HDFS_FOUND)
   FIND_PATH (HDFS_INCLUDE_DIR NAMES hdfs.h PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
   FIND_LIBRARY (HDFS_LIBRARIES NAMES hdfs PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
 
-    message(STATUS " HDFS libraries: ${HDFS_LIBRARIES}")
-    message(STATUS " HDFS include: ${HDFS_INCLUDE_DIR}")
-  if(HDFS_INCLUDE_DIR AND HDFS_LIBRARIES)
+  if(HDFS_INCLUDE_DIR AND HDFS_LIBRARIES AND JRE_LIBRARIES)
+    message(STATUS "Found JVM libraries: ${JRE_LIBRARIES}")
     message(STATUS "Found HDFS libraries: ${HDFS_LIBRARIES}")
     message(STATUS "Found HDFS include: ${HDFS_INCLUDE_DIR}")
     set(HDFS_FOUND TRUE)

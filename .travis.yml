@@ -16,7 +16,7 @@ install:
     - gem install coveralls-lcov
     # Build TileDB
     - cd $TRAVIS_BUILD_DIR/build
-    - cmake -DCMAKE_BUILD_TYPE=Coverage  -DTILEDB_VERBOSE=1 -DUSE_MPI=$USE_MPI -DUSE_HDFS=$USE_HDFS  -DHADOOP_HOME=/usr/local/hadoop/hadoop-2.7.2 ..
+    - cmake -DCMAKE_BUILD_TYPE=Coverage  -DTILEDB_VERBOSE=1 -DUSE_MPI=$USE_MPI -DUSE_HDFS=$USE_HDFS -DJAVA_HOME=/usr/lib/jvm/java-8-oracle  -DHADOOP_HOME=/usr/local/hadoop/hadoop-2.7.2 ..
     - make -j4
     - make examples -j4
     
