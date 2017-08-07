@@ -146,6 +146,8 @@ start-all
 
 export JAVA_HOME=$(readlink -n \/etc\/alternatives\/java | sed "s:\/jre\/bin\/java::")
 echo "JAVA_HOME: " $JAVA_HOME
+export HADOOP_HOME=/usr/local/hadoop/home
+echo "HADOOP_HOME: " $HADOOP_HOME
 export HADOOP_LIB="$HADOOP_HOME/lib/native/"
 echo "HADOOP_LIB: " $HADOOP_LIB
 ls $JAVA_HOME/jre/lib/amd64/server/
