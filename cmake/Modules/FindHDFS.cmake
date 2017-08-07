@@ -39,8 +39,6 @@ if (NOT HDFS_FOUND)
      MESSAGE("---HADOOP_HOME not specified")
   ELSE ()
      LIST (APPEND POSSILE_PATHS
-          "${HADOOP_HOME}/src/c++/libhdfs"
-          "${HADOOP_HOME}/c++/${hdfsosdir}/lib"
           "${HADOOP_HOME}/lib/native"
           "${HADOOP_HOME}/include"
         )
@@ -48,35 +46,23 @@ if (NOT HDFS_FOUND)
 
   MESSAGE("--  Exploring these paths to find libhdfs and hdfs.h: ${POSSILE_PATHS}.")
 
-  IF (UNIX)
-    IF (${ARCH64BIT} EQUAL 1)
-      SET (hdfsosdir "Linux-amd64-64")
-    ELSE()
-      SET (hdfsosdir "Linux-i386-32")
-    ENDIF()
-  ELSEIF(WIN32)
-    SET (hdfsosdir "lib")
+  FIND_PATH (HDFS_INCLUDE_DIR NAMES hdfs.h PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
+  FIND_LIBRARY (HDFS_LIBRARIES NAMES ${libhdfs_libs} PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
+
+
+
+
+  IF (HDFS_FOUND)
+     MESSAGE ("---LIBHDFS ${HDFS_LIBRARIES} found.")
   ELSE()
-    SET (hdfsosdir "unknown")
-  ENDIF()
-  IF (NOT ("${hdfsosdir}" STREQUAL "unknown"))
-    FIND_PATH (HDFS_INCLUDE_DIR NAMES hdfs.h PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
-    FIND_LIBRARY (HDFS_LIBRARIES NAMES ${libhdfs_libs} PATHS ${POSSILE_PATHS} NO_DEFAULT_PATH)
+     MESSAGE ("---LIBHDFS library not found.")
   ENDIF()
 
-
-
-    IF (HDFS_FOUND)
-         MESSAGE ("---LIBHDFS ${HDFS_LIBRARIES} found.")
-    ELSE()
-        MESSAGE ("---LIBHDFS library not found.")
-    ENDIF()
-
-    IF (HDFS_INCLUDE_DIR)
-         MESSAGE ("---LIBHDFS ${HDFS_INCLUDE_DIR} found.")
-    ELSE()
-        MESSAGE ("---HDFS header not found.")
-    ENDIF()
+  IF (HDFS_INCLUDE_DIR)
+     MESSAGE ("---LIBHDFS ${HDFS_INCLUDE_DIR} found.")
+  ELSE()
+     MESSAGE ("---HDFS header not found.")
+  ENDIF()
 
 ENDIF()
 
