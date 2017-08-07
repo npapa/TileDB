@@ -13,7 +13,7 @@ install:
     # Install library dependencies
     - mkdir -p $TRAVIS_BUILD_DIR/build
     - sudo scripts/install-hadoop.sh
-    - sudo scripts/install-travis-deps.sh
+    - if [ "$USE_HDFS" == "ON" ]; then sudo scripts/install-travis-deps.sh; fi
     # Install lcov to coveralls conversion + upload tool
     - gem install coveralls-lcov
     # Build TileDB
@@ -27,7 +27,7 @@ before_script:
 
 script:
     #- make check-format
-    - sudo scripts/hadoop-env-variables
+    - if [ "$USE_HDFS" == "ON" ]; then sudo scripts/hadoop-env-variables.sh; fi
     - sudo make check
 
 after_success:
