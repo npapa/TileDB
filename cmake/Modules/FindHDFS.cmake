@@ -35,7 +35,7 @@ if (NOT HDFS_FOUND)
   SET (libhdfs_libs "libhdfs")
 
   MESSAGE("-- Searching for libhdfs")
-  IF ( ${HADOOP_HOME} "" )
+  IF ( "${HADOOP_HOME}" STREQUAL "" )
      MESSAGE("---HADOOP_HOME not specified")
   ELSE ()
      LIST (APPEND POSSILE_PATHS
