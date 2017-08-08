@@ -11,7 +11,8 @@ function install_java {
 }
 
 function install_hadoop {
-  mkdir -p /usr/local/hadoop/
+  sudo mkdir -p /usr/local/hadoop/
+  sudo chown -R $(whoami) /usr/local/hadoop
   cd /usr/local/hadoop
   curl http://apache.lauf-forum.at/hadoop/common/hadoop-2.8.1/hadoop-2.8.1.tar.gz | sudo tar xz 
   #curl http://apache.forthnet.gr/hadoop/common/hadoop-2.8.1/hadoop-2.8.1.tar.gz | sudo tar xz 
