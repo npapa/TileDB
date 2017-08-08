@@ -11,11 +11,11 @@ function install_java {
 }
 
 function install_hadoop {
-  sudo mkdir -p /usr/local/hadoop/
+  mkdir -p /usr/local/hadoop/
   cd /usr/local/hadoop
-  sudo curl http://apache.forthnet.gr/hadoop/common/hadoop-2.8.1/hadoop-2.8.1.tar.gz | sudo tar xz 
-  sudo mv hadoop-2.8.1 home
-  sudo chown -R hadoop /usr/local/hadoop
+  curl http://apache.forthnet.gr/hadoop/common/hadoop-2.8.1/hadoop-2.8.1.tar.gz | sudo tar xz 
+  mv hadoop-2.8.1 home
+  #sudo chown -R hadoop /usr/local/hadoop
 }
 
 function create_hadoop_user {
@@ -69,8 +69,7 @@ function setup_core_xml {
 </configuration>
 EOF
   tmpfile=/tmp/hadoop_fafsa.xml
-  sudo chown root $tmpfile
-  sudo mv $tmpfile $file
+  mv $tmpfile $file
 }
 
 function setup_mapred_xml {
@@ -90,8 +89,7 @@ function setup_mapred_xml {
 </configuration>
 EOT
   tmpfile=/tmp/hadoop_mapred.xml
-  sudo chown root $tmpfile
-  sudo mv $tmpfile $file
+  mv $tmpfile $file
 }
 
 function setup_hdfs_xml {
@@ -111,30 +109,37 @@ function setup_hdfs_xml {
 </configuration>
 EOF
   tmpfile=/tmp/hadoop_hdfs.xml
-  sudo chown root $tmpfile
-  sudo mv $tmpfile $file
+  mv $tmpfile $file
 }
 
 
 function setup_environment {
   export HADOOP_HOME=/usr/local/hadoop/home
   sudo sed -i -- 's/JAVA_HOME=\${JAVA_HOME}/JAVA_HOME=\$(readlink -f \/usr\/bin\/java | sed "s:bin\/java::")/' $HADOOP_HOME/etc/hadoop/hadoop-env.sh
-  setup_profile
+  #setup_profile
   setup_core_xml
   setup_mapred_xml
   setup_hdfs_xml
-  sudo chown -R hduser $HADOOP_HOME
+  #sudo chown -R hduser $HADOOP_HOME
 }
 
 function start-all {
   sudo $HADOOP_HOME/bin/hdfs namenode -format
-  sudo mkdir /root/.ssh
-  sudo ssh-keygen -t rsa -P "" -f /root/.ssh/id_rsa
-  sudo cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
-  ssh-keyscan -H 127.0.0.1 >> /root/.ssh/known_hosts
-  ssh-keyscan -H 0.0.0.0 >> /root/.ssh/known_hosts
-  ssh-keyscan -H localhost >> /root/.ssh/known_hosts
-  sudo $HADOOP_HOME/sbin/start-dfs.sh
+  mkdir ~/.ssh
+  ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+  cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+  ssh-keyscan -H 127.0.0.1 >> ~/.ssh/known_hosts
+  ssh-keyscan -H 0.0.0.0 >> ~/.ssh/known_hosts
+  ssh-keyscan -H localhost >> ~/.ssh/known_hosts
+  $HADOOP_HOME/sbin/start-dfs.sh
+
+  #sudo mkdir /root/.ssh
+  #sudo ssh-keygen -t rsa -P "" -f /root/.ssh/id_rsa
+  #sudo cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+  #ssh-keyscan -H 127.0.0.1 >> /root/.ssh/known_hosts
+  #ssh-keyscan -H 0.0.0.0 >> /root/.ssh/known_hosts
+  #ssh-keyscan -H localhost >> /root/.ssh/known_hosts
+  #sudo $HADOOP_HOME/sbin/start-dfs.sh
 }
 
 update_apt_repo 
@@ -144,14 +149,14 @@ install_hadoop
 setup_environment
 start-all
 
-export JAVA_HOME=$(readlink -n \/etc\/alternatives\/java | sed "s:\/jre\/bin\/java::")
+export JAVA_HOME=$(readlink -n \/etc\/alternatives\/java | sed "s:\/bin\/java::")
 echo "JAVA_HOME: " $JAVA_HOME
 export HADOOP_HOME=/usr/local/hadoop/home
 echo "HADOOP_HOME: " $HADOOP_HOME
 export HADOOP_LIB="$HADOOP_HOME/lib/native/"
 echo "HADOOP_LIB: " $HADOOP_LIB
 ls $JAVA_HOME/jre/lib/amd64/server/
-export LD_LIBRARY_PATH="$HADOOP_LIB:$JAVA_HOME/jre/lib/amd64/server/"
+export LD_LIBRARY_PATH="$HADOOP_LIB:$JAVA_HOME/lib/amd64/server/"
 echo "LD_LIBRARY_PATH: " $LD_LIBRARY_PATH
 export CLASSPATH=`$HADOOP_HOME/bin/hadoop classpath --glob`
 echo "CLASSPATH: " $CLASSPATH
