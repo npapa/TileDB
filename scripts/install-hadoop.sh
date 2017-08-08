@@ -32,23 +32,6 @@ function create_hadoop_user {
   echo -e "hadoop123\nhadoop123\n" | sudo passwd hadoop
 }
 
-function setup_profile {
-  local file=/etc/profile.d/hadoop-init.sh
-  local tempfile=/tmp/hadoop_setup_sdfds.sh
-  sudo mkdir -p /tmp/hadoop
-  sudo chown hduser -R /tmp/hadoop
-  export HADOOP_HOME=/usr/local/hadoop/home
-  export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
-  cat >> $tempfile  <<EOT
-export HADOOP_HOME=/usr/local/hadoop/home
-export PATH=\$PATH:\$HADOOP_HOME/bin:\$HADOOP_HOME/sbin
-EOT
-  tempfile=/tmp/hadoop_setup_sdfds.sh
-  chmod +x $tempfile
-  sudo chown root $tempfile
-  sudo mv $tempfile $file
-}
-
 function setup_core_xml {
   export HADOOP_HOME=/usr/local/hadoop/home
   local tmpfile=/tmp/hadoop_fafsa.xml
@@ -118,7 +101,6 @@ EOF
 function setup_environment {
   export HADOOP_HOME=/usr/local/hadoop/home
   sudo sed -i -- 's/JAVA_HOME=\${JAVA_HOME}/JAVA_HOME=\$(readlink -f \/usr\/bin\/java | sed "s:bin\/java::")/' $HADOOP_HOME/etc/hadoop/hadoop-env.sh
-  #setup_profile
   setup_core_xml
   setup_mapred_xml
   setup_hdfs_xml
@@ -126,7 +108,7 @@ function setup_environment {
 }
 
 function start-all {
-  sudo $HADOOP_HOME/bin/hdfs namenode -format
+  $HADOOP_HOME/bin/hdfs namenode -format
   mkdir ~/.ssh
   ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
   cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
@@ -134,14 +116,6 @@ function start-all {
   ssh-keyscan -H 0.0.0.0 >> ~/.ssh/known_hosts
   ssh-keyscan -H localhost >> ~/.ssh/known_hosts
   $HADOOP_HOME/sbin/start-dfs.sh
-
-  #sudo mkdir /root/.ssh
-  #sudo ssh-keygen -t rsa -P "" -f /root/.ssh/id_rsa
-  #sudo cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
-  #ssh-keyscan -H 127.0.0.1 >> /root/.ssh/known_hosts
-  #ssh-keyscan -H 0.0.0.0 >> /root/.ssh/known_hosts
-  #ssh-keyscan -H localhost >> /root/.ssh/known_hosts
-  #sudo $HADOOP_HOME/sbin/start-dfs.sh
 }
 
 update_apt_repo 
