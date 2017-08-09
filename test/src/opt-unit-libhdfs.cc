@@ -134,7 +134,7 @@ struct LibHDFSFx {
     }
     stop();
 
-    CHECK(readSize == totalSize);
+    CHECK(readSize == curSize);
     free(buffer);
     hdfsCloseFile(fs, readFile);
     hdfsDisconnect(fs);
