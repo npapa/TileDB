@@ -127,7 +127,7 @@ struct LibHDFSFx {
     printf("Test read with buffer size: %d\n", bufferSize);
     start();
     // read from the file
-    curSize=1
+    curSize = 1;
     while(curSize>0) {
       curSize = hdfsRead(fs, readFile, (void *)buffer, bufferSize);
       readSize += curSize;
