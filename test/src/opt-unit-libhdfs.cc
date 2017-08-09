@@ -127,14 +127,15 @@ struct LibHDFSFx {
     printf("Test read with buffer size: %d\n", bufferSize);
     start();
     // read from the file
-    curSize = bufferSize;
-    for (; curSize == bufferSize;) {
-      curSize = hdfsRead(fs, readFile, (void *)buffer, curSize);
+    curSize=1
+    while(curSize>0) {
+      curSize = hdfsRead(fs, readFile, (void *)buffer, bufferSize);
       readSize += curSize;
     }
     stop();
 
-    CHECK(readSize == curSize);
+    CHECK(readSize == totalSize);
+
     free(buffer);
     hdfsCloseFile(fs, readFile);
     hdfsDisconnect(fs);
