@@ -30,7 +30,7 @@
  * This file includes definitions of filesystem functions.
  */
 
-#ifdef HAVE_MPI
+#ifdef HAVE_HDFS
 #include "../../include/vfs/hdfs_filesystem.h"
 #include "constants.h"
 #include "logger.h"
