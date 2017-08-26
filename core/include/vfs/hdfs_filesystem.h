@@ -29,7 +29,7 @@
  *
  * This file includes declarations of filesystem functions.
  */
-
+#ifdef HAVE_HDFS
 #ifndef TILEDB_FILESYSTEM_HDFS_H
 #define TILEDB_FILESYSTEM_HDFS_H
 
@@ -38,8 +38,10 @@
 #include <vector>
 
 #include "status.h"
-#include "uri.h"
+#include "uri.hi"
+
 #include "hdfs.h"
+
 
 namespace tiledb {
 
@@ -77,4 +79,5 @@ namespace vfs_hdfs {
 
 }  // namespace tiledb
 
+#endif
 #endif  // TILEDB_FILESYSTEM_HDFS_H

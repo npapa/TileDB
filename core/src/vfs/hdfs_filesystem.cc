@@ -30,9 +30,9 @@
  * This file includes definitions of filesystem functions.
  */
 
-
+#ifdef HAVE_MPI
 #include "../../include/vfs/hdfs_filesystem.h"
-#include "configurator.h"
+#include "constants.h"
 #include "logger.h"
 #include "utils.h"
 
@@ -177,7 +177,7 @@ Status read_from_file(const std::string& path, off_t offset, void* buffer, size_
 // Write length bytes of buffer to a given path
 Status write_to_file(const std::string& path, const void* buffer, const size_t length, hdfsFS fs){
   // Open file
-  hdfsFile writeFile = hdfsOpenFile(fs, path.c_str(), O_WRONLY, Configurator::max_write_bytes(), 0, 0);
+  hdfsFile writeFile = hdfsOpenFile(fs, path.c_str(), O_WRONLY, constants::max_write_bytes, 0, 0);
   if (!writeFile) {
     return LOG_STATUS(Status::IOError(
         std::string("Cannot write to file '") + path +
@@ -189,8 +189,8 @@ Status write_to_file(const std::string& path, const void* buffer, const size_t l
   off_t nrRemaining;
   tSize curSize;
   tSize written;
-  for (nrRemaining = (off_t)length; nrRemaining > 0; nrRemaining -= Configurator::max_write_bytes()) {
-    curSize = (Configurator::max_write_bytes() < nrRemaining) ? Configurator::max_write_bytes() : (tSize)nrRemaining;
+  for (nrRemaining = (off_t)length; nrRemaining > 0; nrRemaining -= constants::max_write_bytes) {
+    curSize = (constants::max_write_bytes < nrRemaining) ? constants::max_write_bytes : (tSize)nrRemaining;
     if ((written = hdfsWrite(fs, writeFile, (void *)buffer, curSize)) !=
         curSize) {
       return LOG_STATUS(Status::IOError(
@@ -313,4 +313,5 @@ Status filesize(const std::string& path, size_t* nbytes, hdfsFS fs){
 }  // namespace vfs_hdfs
 
 }  // namespace tiledb
- 
+
+#endif 
