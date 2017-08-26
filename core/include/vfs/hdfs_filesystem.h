@@ -38,7 +38,6 @@
 #include <vector>
 
 #include "status.h"
-#include "uri.hi"
 
 #include "hdfs.h"
 
