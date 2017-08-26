@@ -27,8 +27,6 @@ TEST_CASE_METHOD(LibHDFSFfilesystemx, "Test hdfs filesystem") {
     Status st = vfs_hdfs::connect(fs);
     CHECK(st.ok());
     
-    st = vfs_hdfs::delete_dir("/test_dir",fs);
-    CHECK(st.ok());
     
     st = vfs_hdfs::create_dir("/test_dir",fs);
     CHECK(st.ok());
@@ -37,12 +35,6 @@ TEST_CASE_METHOD(LibHDFSFfilesystemx, "Test hdfs filesystem") {
     
     st = vfs_hdfs::create_dir("/test_dir",fs);
     CHECK(!st.ok());
-    
-    st = vfs_hdfs::delete_dir("/test_dir",fs);
-    CHECK(st.ok());
-    
-    st = vfs_hdfs::create_dir("/test_dir",fs);
-    CHECK(st.ok());
     
     st = vfs_hdfs::create_file("/test_file",fs);
     CHECK(st.ok());
@@ -118,6 +110,12 @@ TEST_CASE_METHOD(LibHDFSFfilesystemx, "Test hdfs filesystem") {
     CHECK(st.ok());
     CHECK(nbytes == (size_t) bufferSize);
     fprintf(stderr, "Size %ld\n", nbytes);
+   
+    st = vfs_hdfs::delete_dir("/test_dir",fs);
+    CHECK(st.ok());
+ 
+    st = vfs_hdfs::delete_file("/test_file",fs);
+    CHECK(st.ok());
     
     st = vfs_hdfs::disconnect(fs);
     CHECK(st.ok());
