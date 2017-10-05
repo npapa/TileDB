@@ -54,7 +54,7 @@ struct DenseArrayFx {
   const std::string URI_PREFIX = "hdfs://";
   const std::string TEMP_DIR = "/tiledb/";
   const std::string GROUP = "my_group/";
-  const std::string HADOOP = "hadoop"; 
+  const std::string HADOOP = "$HADOOP_HOME/bin/hadoop"; 
 
   // Array name
   std::string array_name_;
@@ -590,13 +590,12 @@ struct DenseArrayFx {
     // Return
     return rc;
   }
-};
 
 /**
  * Tests 10 random 2D subarrays and checks if the value of each cell is equal
  * to row_id*dim1+col_id. Top left corner is always 4,4.
  */
-TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense sorted reads", "[dense]") {
+void test1(){
   // Error code
   int rc;
 
@@ -690,8 +689,9 @@ TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense sorted reads", "[dense]
  * Tests random 2D subarray writes.
  */
 
-TEST_CASE_METHOD(
-    DenseArrayFx, "C API: Test random dense sorted writes", "[capi]") {
+//TEST_CASE_METHOD(
+//    DenseArrayFx, "C API: Test random dense sorted writes", "[capi]") {
+void test2(){
   std::cout << "DEBUG: Test random dense sorted writes\n";
   // Error code
   int rc;
@@ -785,8 +785,9 @@ TEST_CASE_METHOD(
 /**
  * Test random updates in a 2D dense array.
  */
-TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense updates", "[capi]") {
-  // Error code
+//TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense updates", "[capi]") {
+void test3(){  
+// Error code
   int rc;
 
   // Parameters used in this test
@@ -873,4 +874,16 @@ TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense updates", "[capi]") {
   delete[] after_update;
   delete[] buffer_a1;
   delete[] buffer_coords;
+}
+};
+TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense sorted reads", "[dense]") {
+  test1();
+  std::string cmd = HADOOP + " fs -rm -r -f " + TEMP_DIR + GROUP;
+  int rc = system(cmd.c_str());
+   
+  test2();
+  cmd = HADOOP + " fs -rm -r -f " + TEMP_DIR + GROUP;
+  rc = system(cmd.c_str());
+    
+  test3();
 }
