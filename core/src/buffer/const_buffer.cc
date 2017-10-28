@@ -40,6 +40,12 @@ namespace tiledb {
 /*   CONSTRUCTORS & DESTRUCTORS   */
 /* ****************************** */
 
+ConstBuffer::ConstBuffer(Buffer* buff) {
+  data_ = buff->data();
+  size_ = buff->size();
+  offset_ = 0;
+}
+
 ConstBuffer::ConstBuffer(const void* data, uint64_t size)
     : data_(data)
     , size_(size) {
@@ -50,9 +56,34 @@ ConstBuffer::ConstBuffer(const void* data, uint64_t size)
 /*               API              */
 /* ****************************** */
 
-void ConstBuffer::read(void* buffer, uint64_t nbytes) {
+void ConstBuffer::advance_offset(uint64_t nbytes) {
+  offset_ += nbytes;
+}
+
+const void* ConstBuffer::data() const {
+  return data_;
+}
+
+bool ConstBuffer::end() const {
+  return offset_ == size_;
+}
+
+uint64_t ConstBuffer::nbytes_left_to_read() const {
+  return size_ - offset_;
+}
+
+uint64_t ConstBuffer::offset() const {
+  return offset_;
+}
+
+Status ConstBuffer::read(void* buffer, uint64_t nbytes) {
+  if (offset_ + nbytes > size_)
+    return Status::ConstBufferError("Read buffer overflow");
+
   memcpy(buffer, (char*)data_ + offset_, nbytes);
   offset_ += nbytes;
+
+  return Status::Ok();
 }
 
 void ConstBuffer::read_with_shift(
@@ -67,6 +98,10 @@ void ConstBuffer::read_with_shift(
     buffer[i] = offset + data[i];
 
   offset_ += nbytes;
+}
+
+uint64_t ConstBuffer::size() const {
+  return size_;
 }
 
 /* ****************************** */

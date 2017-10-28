@@ -31,6 +31,10 @@
  * Tests of C API for dense array operations.
  */
 
+#include "catch.hpp"
+#include "posix_filesystem.h"
+#include "tiledb.h"
+
 #include <sys/time.h>
 #include <cassert>
 #include <cstring>
@@ -38,9 +42,6 @@
 #include <iostream>
 #include <map>
 #include <sstream>
-#include "tiledb.h"
-
-#include "catch.hpp"
 
 struct DenseArrayFx {
   // Constant parameters
@@ -48,38 +49,44 @@ struct DenseArrayFx {
   const tiledb_datatype_t ATTR_TYPE = TILEDB_INT32;
   const char* DIM1_NAME = "x";
   const char* DIM2_NAME = "y";
-  const tiledb_datatype_t DIM1_TYPE = TILEDB_INT64;
-  const tiledb_datatype_t DIM2_TYPE = TILEDB_INT64;
+  const tiledb_datatype_t DIM_TYPE = TILEDB_INT64;
 
   // Group folder name
+#ifdef HAVE_HDFS
+  const std::string URI_PREFIX = "hdfs://";
+  const std::string TEMP_DIR = "/tiledb_test/";
+#else
+  const std::string URI_PREFIX = "file://";
+  const std::string TEMP_DIR = tiledb::posix::current_dir() + "/";
+#endif
   const std::string GROUP = "my_group/";
 
   // Array name
   std::string array_name_;
 
-  // Array schema object under test
-  tiledb_array_schema_t* array_schema_;
+  // Array metadata object under test
+  tiledb_array_metadata_t* array_metadata_;
 
   // TileDB context
   tiledb_ctx_t* ctx_;
 
   DenseArrayFx() {
+    ctx_ = nullptr;
+    array_metadata_ = nullptr;
+
     // Reset the random number generator
-    srand(0);
+    std::srand(0);
 
     // Initialize context
     int rc = tiledb_ctx_create(&ctx_);
     assert(rc == TILEDB_OK);
 
     // Create group, delete it if it already exists
-    std::string cmd = "test -d " + GROUP;
-    rc = system(cmd.c_str());
-    if (rc == 0) {
-      cmd = "rm -rf " + GROUP;
-      rc = system(cmd.c_str());
-      assert(rc == 0);
+    if (dir_exists(TEMP_DIR + GROUP)) {
+      bool success = remove_dir(TEMP_DIR + GROUP);
+      assert(success == true);
     }
-    rc = tiledb_group_create(ctx_, GROUP.c_str());
+    rc = tiledb_group_create(ctx_, (URI_PREFIX + TEMP_DIR + GROUP).c_str());
     assert(rc == TILEDB_OK);
   }
 
@@ -88,9 +95,26 @@ struct DenseArrayFx {
     tiledb_ctx_free(ctx_);
 
     // Remove the temporary group
-    std::string cmd = "rm -rf " + GROUP;
-    int rc = system(cmd.c_str());
-    assert(rc == 0);
+    bool success = remove_dir(TEMP_DIR + GROUP);
+    assert(success == true);
+  }
+
+  bool dir_exists(std::string path) {
+#ifdef HAVE_HDFS
+    std::string cmd = std::string("hadoop fs -test -d ") + path;
+#else
+    std::string cmd = std::string("test -d ") + path;
+#endif
+    return (system(cmd.c_str()) == 0);
+  }
+
+  bool remove_dir(std::string path) {
+#ifdef HAVE_HDFS
+    std::string cmd = std::string("hadoop fs -rm -r -f ") + path;
+#else
+    std::string cmd = std::string("rm -r -f ") + path;
+#endif
+    return (system(cmd.c_str()) == 0);
   }
 
   /**
@@ -113,20 +137,20 @@ struct DenseArrayFx {
       const int64_t* buffer_updates_coords,
       const int64_t domain_size_0,
       const int64_t domain_size_1,
-      const int64_t update_num) {
+      const uint64_t update_num) {
     // Initializations
     int l, r;
-    int64_t cell_num = domain_size_0 * domain_size_1;
+    uint64_t cell_num = (uint64_t)domain_size_0 * domain_size_1;
 
     // Check the contents of the buffers cell by cell
-    for (int64_t i = 0; i < cell_num; ++i) {
+    for (uint64_t i = 0; i < cell_num; ++i) {
       l = buffer_before[i];
       r = buffer_after[i];
 
       // If they are not the same, check if it is due to an update
       if (l != r) {
         bool found = false;
-        for (int64_t k = 0; k < update_num; ++k) {
+        for (uint64_t k = 0; k < update_num; ++k) {
           // The difference is due to an update
           if (r == buffer_updates_a1[k] &&
               (l / domain_size_1) == buffer_updates_coords[2 * k] &&
@@ -172,8 +196,8 @@ struct DenseArrayFx {
     // Error code
     int rc;
 
-    // Prepare and set the array schema object and data structures
-    int64_t domain[] = {domain_0_lo, domain_0_hi, domain_1_lo, domain_1_hi};
+    // Prepare and set the array metadata object and data structures
+    int64_t dim_domain[] = {domain_0_lo, domain_0_hi, domain_1_lo, domain_1_hi};
 
     // Create attribute
     tiledb_attribute_t* a;
@@ -182,41 +206,45 @@ struct DenseArrayFx {
     //    rc = tiledb_attribute_set_compressor(ctx_, a, TILEDB_GZIP, -1);
     //    REQUIRE(rc == TILEDB_OK);
 
-    // Create dimensions
-    tiledb_dimension_t* d1;
-    rc = tiledb_dimension_create(
-        ctx_, &d1, DIM1_NAME, DIM1_TYPE, &domain[0], &tile_extent_0);
+    // Create domain
+    tiledb_domain_t* domain;
+    rc = tiledb_domain_create(ctx_, &domain, DIM_TYPE);
     REQUIRE(rc == TILEDB_OK);
-    tiledb_dimension_t* d2;
-    rc = tiledb_dimension_create(
-        ctx_, &d2, DIM2_NAME, DIM2_TYPE, &domain[2], &tile_extent_1);
+    rc = tiledb_domain_add_dimension(
+        ctx_, domain, DIM1_NAME, &dim_domain[0], &tile_extent_0);
+    REQUIRE(rc == TILEDB_OK);
+    rc = tiledb_domain_add_dimension(
+        ctx_, domain, DIM2_NAME, &dim_domain[2], &tile_extent_1);
     REQUIRE(rc == TILEDB_OK);
 
-    // Create array schema
-    rc = tiledb_array_schema_create(ctx_, &array_schema_, array_name_.c_str());
+    // Create array metadata
+    rc = tiledb_array_metadata_create(
+        ctx_, &array_metadata_, array_name_.c_str());
     REQUIRE(rc == TILEDB_OK);
-    rc = tiledb_array_schema_set_capacity(ctx_, array_schema_, capacity);
+    rc = tiledb_array_metadata_set_capacity(ctx_, array_metadata_, capacity);
     REQUIRE(rc == TILEDB_OK);
-    rc = tiledb_array_schema_set_cell_order(ctx_, array_schema_, cell_order);
+    rc =
+        tiledb_array_metadata_set_cell_order(ctx_, array_metadata_, cell_order);
     REQUIRE(rc == TILEDB_OK);
-    rc = tiledb_array_schema_set_tile_order(ctx_, array_schema_, tile_order);
+    rc =
+        tiledb_array_metadata_set_tile_order(ctx_, array_metadata_, tile_order);
     REQUIRE(rc == TILEDB_OK);
-    rc = tiledb_array_schema_add_attribute(ctx_, array_schema_, a);
+    rc = tiledb_array_metadata_add_attribute(ctx_, array_metadata_, a);
     REQUIRE(rc == TILEDB_OK);
-    rc = tiledb_array_schema_add_dimension(ctx_, array_schema_, d1);
-    REQUIRE(rc == TILEDB_OK);
-    rc = tiledb_array_schema_add_dimension(ctx_, array_schema_, d2);
+    rc = tiledb_array_metadata_set_domain(ctx_, array_metadata_, domain);
     REQUIRE(rc == TILEDB_OK);
 
     // Create the array
-    rc = tiledb_array_create(ctx_, array_schema_);
+    rc = tiledb_array_create(ctx_, array_metadata_);
     REQUIRE(rc == TILEDB_OK);
 
     // Clean up
-    tiledb_attribute_free(a);
-    tiledb_dimension_free(d1);
-    tiledb_dimension_free(d2);
-    tiledb_array_schema_free(array_schema_);
+    rc = tiledb_attribute_free(ctx_, a);
+    REQUIRE(rc == TILEDB_OK);
+    rc = tiledb_domain_free(ctx_, domain);
+    REQUIRE(rc == TILEDB_OK);
+    rc = tiledb_array_metadata_free(ctx_, array_metadata_);
+    REQUIRE(rc == TILEDB_OK);
   }
 
   /**
@@ -232,7 +260,7 @@ struct DenseArrayFx {
   int* generate_1D_int_buffer(
       const int64_t domain_size_0, const int64_t domain_size_1) {
     // Create buffer
-    int* buffer = new int[domain_size_0 * domain_size_1];
+    auto buffer = new int[domain_size_0 * domain_size_1];
 
     // Populate buffer
     for (int64_t i = 0; i < domain_size_0; ++i)
@@ -255,13 +283,13 @@ struct DenseArrayFx {
   int** generate_2D_buffer(
       const int64_t domain_size_0, const int64_t domain_size_1) {
     // Create buffer
-    int** buffer = new int*[domain_size_0];
+    auto buffer = new int*[domain_size_0];
 
     // Populate buffer
     for (int64_t i = 0; i < domain_size_0; ++i) {
       buffer[i] = new int[domain_size_1];
       for (int64_t j = 0; j < domain_size_1; ++j) {
-        buffer[i][j] = i * domain_size_1 + j;
+        buffer[i][j] = (int)(i * domain_size_1 + j);
       }
     }
 
@@ -291,7 +319,8 @@ struct DenseArrayFx {
       const int64_t domain_0_hi,
       const int64_t domain_1_lo,
       const int64_t domain_1_hi,
-      const tiledb_query_mode_t read_mode) {
+      const tiledb_query_type_t query_type,
+      const tiledb_layout_t query_layout) {
     // Error code
     int rc;
 
@@ -301,39 +330,42 @@ struct DenseArrayFx {
 
     const char* attributes[] = {ATTR_NAME};
 
-    // Initialize the array in the input mode
-    tiledb_array_t* tiledb_array;
-    rc = tiledb_array_init(
-        ctx_,
-        &tiledb_array,
-        array_name_.c_str(),
-        read_mode,
-        subarray,
-        attributes,
-        1);
-    if (rc != TILEDB_OK)
-      return nullptr;
-
     // Prepare the buffers that will store the result
     int64_t domain_size_0 = domain_0_hi - domain_0_lo + 1;
     int64_t domain_size_1 = domain_1_hi - domain_1_lo + 1;
     int64_t cell_num = domain_size_0 * domain_size_1;
-    int* buffer_a1 = new int[cell_num];
+    auto buffer_a1 = new int[cell_num];
     REQUIRE(buffer_a1 != nullptr);
     void* buffers[] = {buffer_a1};
-    size_t buffer_size_a1 = cell_num * sizeof(int);
-    size_t buffer_sizes[] = {buffer_size_a1};
+    uint64_t buffer_size_a1 = cell_num * sizeof(int);
+    uint64_t buffer_sizes[] = {buffer_size_a1};
+
+    // Create query
+    tiledb_query_t* query;
+    rc = tiledb_query_create(
+        ctx_,
+        &query,
+        array_name_.c_str(),
+        query_type,
+        query_layout,
+        subarray,
+        attributes,
+        1,
+        buffers,
+        buffer_sizes);
+    if (rc != TILEDB_OK)
+      return nullptr;
 
     // Read from array
-    rc = tiledb_array_read(tiledb_array, buffers, buffer_sizes);
+    rc = tiledb_query_submit(ctx_, query);
     REQUIRE(rc == TILEDB_OK);
     if (rc != TILEDB_OK) {
       delete[] buffer_a1;
       return nullptr;
     }
 
-    // Finalize the array
-    rc = tiledb_array_finalize(tiledb_array);
+    // Free/finalize query
+    rc = tiledb_query_free(ctx_, query);
     REQUIRE(rc == TILEDB_OK);
     if (rc != TILEDB_OK) {
       delete[] buffer_a1;
@@ -346,7 +378,7 @@ struct DenseArrayFx {
 
   /** Sets the array name for the current test. */
   void set_array_name(const char* name) {
-    array_name_ = GROUP + name;
+    array_name_ = URI_PREFIX + TEMP_DIR + GROUP + name;
   }
 
   /**
@@ -366,32 +398,19 @@ struct DenseArrayFx {
       int64_t update_num,
       int seed,
       void** buffers,
-      const size_t* buffer_sizes) {
+      uint64_t* buffer_sizes) {
     // Error code
     int rc;
 
     // For easy reference
-    int* buffer_a1 = (int*)buffers[0];
-    int64_t* buffer_coords = (int64_t*)buffers[1];
+    auto buffer_a1 = (int*)buffers[0];
+    auto buffer_coords = (int64_t*)buffers[1];
 
     // Specify attributes to be written
-    const char* attributes[] = {ATTR_NAME, tiledb_coords()};
-
-    // Initialize the array
-    tiledb_array_t* tiledb_array;
-    rc = tiledb_array_init(
-        ctx_,
-        &tiledb_array,
-        array_name_.c_str(),
-        TILEDB_ARRAY_WRITE_UNSORTED,
-        nullptr,
-        attributes,
-        2);
-    if (rc != TILEDB_OK)
-      return TILEDB_ERR;
+    const char* attributes[] = {ATTR_NAME, TILEDB_COORDS};
 
     // Populate buffers with random updates
-    srand(seed);
+    std::srand(seed);
     int64_t x, y, v;
     int64_t coords_index = 0L;
     std::map<std::string, int> my_map;
@@ -401,9 +420,9 @@ struct DenseArrayFx {
       std::ostringstream rand_stream;
       do {
         std::ostringstream rand_stream;
-        x = rand() % domain_size_0;
-        y = rand() % domain_size_1;
-        v = rand();
+        x = std::rand() % domain_size_0;
+        y = std::rand() % domain_size_1;
+        v = std::rand();
         rand_stream << x << "," << y;
         it = my_map.find(rand_stream.str());
       } while (it != my_map.end());
@@ -414,13 +433,29 @@ struct DenseArrayFx {
       buffer_a1[i] = v;
     }
 
-    // Write to array
-    rc = tiledb_array_write(tiledb_array, (const void**)buffers, buffer_sizes);
+    // Create query
+    tiledb_query_t* query;
+    rc = tiledb_query_create(
+        ctx_,
+        &query,
+        array_name_.c_str(),
+        TILEDB_WRITE,
+        TILEDB_UNORDERED,
+        nullptr,
+        attributes,
+        2,
+        buffers,
+        buffer_sizes);
     if (rc != TILEDB_OK)
       return TILEDB_ERR;
 
-    // Finalize the array
-    rc = tiledb_array_finalize(tiledb_array);
+    // Submit query
+    rc = tiledb_query_submit(ctx_, query);
+    if (rc != TILEDB_OK)
+      return TILEDB_ERR;
+
+    // Free/finalize query
+    rc = tiledb_query_free(ctx_, query);
     if (rc != TILEDB_OK)
       return TILEDB_ERR;
 
@@ -446,30 +481,33 @@ struct DenseArrayFx {
     // Error code
     int rc;
 
-    // Initialize the array
-    tiledb_array_t* tiledb_array;
-    rc = tiledb_array_init(
-        ctx_,
-        &tiledb_array,
-        array_name_.c_str(),
-        TILEDB_ARRAY_WRITE,
-        nullptr,
-        nullptr,
-        0);
-    if (rc != TILEDB_OK)
-      return TILEDB_ERR;
-
     // Other initializations
-    int** buffer = generate_2D_buffer(domain_size_0, domain_size_1);
+    auto buffer = generate_2D_buffer(domain_size_0, domain_size_1);
     int64_t cell_num_in_tile = tile_extent_0 * tile_extent_1;
-    int* buffer_a1 = new int[cell_num_in_tile];
+    auto buffer_a1 = new int[cell_num_in_tile];
     for (int64_t i = 0; i < cell_num_in_tile; ++i)
       buffer_a1[i] = 0;
-    const void* buffers[2];
+    void* buffers[2];
     buffers[0] = buffer_a1;
-    size_t buffer_sizes[2];
+    uint64_t buffer_sizes[2];
     int64_t index = 0L;
-    size_t buffer_size = 0L;
+    uint64_t buffer_size = 0L;
+
+    // Create query
+    tiledb_query_t* query;
+    rc = tiledb_query_create(
+        ctx_,
+        &query,
+        array_name_.c_str(),
+        TILEDB_WRITE,
+        TILEDB_GLOBAL_ORDER,
+        nullptr,
+        nullptr,
+        0,
+        buffers,
+        buffer_sizes);
+    if (rc != TILEDB_OK)
+      return TILEDB_ERR;
 
     // Populate and write tile by tile
     for (int64_t i = 0; i < domain_size_0; i += tile_extent_0) {
@@ -489,9 +527,12 @@ struct DenseArrayFx {
         }
         buffer_size = k * l * sizeof(int);
         buffer_sizes[0] = {buffer_size};
-        rc = tiledb_array_write(tiledb_array, buffers, buffer_sizes);
+
+        //    tiledb_query_reset_buffers(ctx_, query, buffers, buffer_sizes);
+        rc = tiledb_query_submit(ctx_, query);
+
         if (rc != TILEDB_OK) {
-          tiledb_array_finalize(tiledb_array);
+          tiledb_query_free(ctx_, query);
           for (int64_t i = 0; i < domain_size_0; ++i)
             delete[] buffer[i];
           delete[] buffer;
@@ -501,8 +542,8 @@ struct DenseArrayFx {
       }
     }
 
-    // Finalize the array
-    rc = tiledb_array_finalize(tiledb_array);
+    // Finalize the query
+    rc = tiledb_query_free(ctx_, query);
 
     // Clean up
     for (int64_t i = 0; i < domain_size_0; ++i)
@@ -526,36 +567,40 @@ struct DenseArrayFx {
    */
   int write_dense_subarray_2D(
       int64_t* subarray,
-      tiledb_query_mode_t write_mode,
+      tiledb_query_type_t query_type,
+      tiledb_layout_t query_layout,
       int* buffer,
-      size_t* buffer_sizes) {
+      uint64_t* buffer_sizes) {
     // Error code
     int rc;
 
-    // Attribute to focus on
+    // Attribute to focus on and buffers
     const char* attributes[] = {ATTR_NAME};
+    void* buffers[] = {buffer};
 
-    // Initialize the array
-    tiledb_array_t* tiledb_array;
-    rc = tiledb_array_init(
+    // Create query
+    tiledb_query_t* query;
+    rc = tiledb_query_create(
         ctx_,
-        &tiledb_array,
+        &query,
         array_name_.c_str(),
-        write_mode,
+        query_type,
+        query_layout,
         subarray,
         attributes,
-        1);
+        1,
+        buffers,
+        buffer_sizes);
     if (rc != TILEDB_OK)
       return TILEDB_ERR;
 
-    // Write to array
-    const void* buffers[] = {buffer};
-    rc = tiledb_array_write(tiledb_array, buffers, buffer_sizes);
+    // Submit query
+    rc = tiledb_query_submit(ctx_, query);
     if (rc != TILEDB_OK)
       return TILEDB_ERR;
 
-    // Finalize the array
-    rc = tiledb_array_finalize(tiledb_array);
+    // Free/finalize query
+    rc = tiledb_query_free(ctx_, query);
 
     // Return
     return rc;
@@ -566,20 +611,21 @@ struct DenseArrayFx {
  * Tests 10 random 2D subarrays and checks if the value of each cell is equal
  * to row_id*dim1+col_id. Top left corner is always 4,4.
  */
-TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense sorted reads") {
+TEST_CASE_METHOD(
+    DenseArrayFx, "C API: Test random dense sorted reads", "[dense]") {
   // Error code
   int rc;
 
   // Parameters used in this test
   int64_t domain_size_0 = 5000;
   int64_t domain_size_1 = 10000;
-  int64_t tile_extent_0 = 100;
-  int64_t tile_extent_1 = 100;
+  int64_t tile_extent_0 = 1000;
+  int64_t tile_extent_1 = 1000;
   int64_t domain_0_lo = 0;
   int64_t domain_0_hi = domain_size_0 - 1;
   int64_t domain_1_lo = 0;
   int64_t domain_1_hi = domain_size_1 - 1;
-  uint64_t capacity = 1000;
+  uint64_t capacity = 1000000;
   tiledb_layout_t cell_order = TILEDB_ROW_MAJOR;
   tiledb_layout_t tile_order = TILEDB_ROW_MAJOR;
   int iter_num = 10;
@@ -614,15 +660,15 @@ TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense sorted reads") {
   int64_t height = 0, width = 0;
 
   for (int iter = 0; iter < iter_num; ++iter) {
-    height = rand() % (domain_size_0 - d0_lo);
-    width = rand() % (domain_size_1 - d1_lo);
+    height = std::rand() % (domain_size_0 - d0_lo);
+    width = std::rand() % (domain_size_1 - d1_lo);
     d0_hi = d0_lo + height;
     d1_hi = d1_lo + width;
     int64_t index = 0;
 
     // Read subarray
     int* buffer = read_dense_array_2D(
-        d0_lo, d0_hi, d1_lo, d1_hi, TILEDB_ARRAY_READ_SORTED_ROW);
+        d0_lo, d0_hi, d1_lo, d1_hi, TILEDB_READ, TILEDB_ROW_MAJOR);
     REQUIRE(buffer != NULL);
 
     bool allok = true;
@@ -652,7 +698,8 @@ TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense sorted reads") {
  * Tests random 2D subarray writes.
  */
 
-TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense sorted writes") {
+TEST_CASE_METHOD(
+    DenseArrayFx, "C API: Test random dense sorted writes", "[dense]") {
   // Error code
   int rc;
 
@@ -689,26 +736,26 @@ TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense sorted writes") {
   int64_t d0[2], d1[2];
   for (int i = 0; i < iter_num; ++i) {
     // Create subarray
-    d0[0] = rand() % domain_size_0;
-    d1[0] = rand() % domain_size_1;
-    d0[1] = d0[0] + rand() % (domain_size_0 - d0[0]);
-    d1[1] = d1[0] + rand() % (domain_size_1 - d1[0]);
+    d0[0] = std::rand() % domain_size_0;
+    d1[0] = std::rand() % domain_size_1;
+    d0[1] = d0[0] + std::rand() % (domain_size_0 - d0[0]);
+    d1[1] = d1[0] + std::rand() % (domain_size_1 - d1[0]);
     int64_t subarray[] = {d0[0], d0[1], d1[0], d1[1]};
 
     // Prepare buffers
     int64_t subarray_length[2] = {d0[1] - d0[0] + 1, d1[1] - d1[0] + 1};
     int64_t cell_num_in_subarray = subarray_length[0] * subarray_length[1];
-    int* buffer = new int[cell_num_in_subarray];
+    auto buffer = new int[cell_num_in_subarray];
     int64_t index = 0;
-    size_t buffer_size = cell_num_in_subarray * sizeof(int);
-    size_t buffer_sizes[] = {buffer_size};
+    uint64_t buffer_size = cell_num_in_subarray * sizeof(int);
+    uint64_t buffer_sizes[] = {buffer_size};
     for (int64_t r = 0; r < subarray_length[0]; ++r)
       for (int64_t c = 0; c < subarray_length[1]; ++c)
-        buffer[index++] = -(rand() % 999999);
+        buffer[index++] = -(std::rand() % 999999);
 
     // Write 2D subarray
     rc = write_dense_subarray_2D(
-        subarray, TILEDB_ARRAY_WRITE_SORTED_ROW, buffer, buffer_sizes);
+        subarray, TILEDB_WRITE, TILEDB_ROW_MAJOR, buffer, buffer_sizes);
     REQUIRE(rc == TILEDB_OK);
 
     // Read back the same subarray
@@ -717,7 +764,8 @@ TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense sorted writes") {
         subarray[1],
         subarray[2],
         subarray[3],
-        TILEDB_ARRAY_READ_SORTED_ROW);
+        TILEDB_READ,
+        TILEDB_ROW_MAJOR);
     REQUIRE(read_buffer != NULL);
 
     // Check the two buffers
@@ -739,7 +787,7 @@ TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense sorted writes") {
 /**
  * Test random updates in a 2D dense array.
  */
-TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense updates") {
+TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense updates", "[dense]") {
   // Error code
   int rc;
 
@@ -781,14 +829,19 @@ TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense updates") {
 
   // Read the entire array back to memory
   int* before_update = read_dense_array_2D(
-      domain_0_lo, domain_0_hi, domain_1_lo, domain_1_hi, TILEDB_ARRAY_READ);
+      domain_0_lo,
+      domain_0_hi,
+      domain_1_lo,
+      domain_1_hi,
+      TILEDB_READ,
+      TILEDB_GLOBAL_ORDER);
   REQUIRE(before_update != NULL);
 
   // Prepare random updates
-  int* buffer_a1 = new int[update_num];
-  int64_t* buffer_coords = new int64_t[2 * update_num];
+  auto buffer_a1 = new int[update_num];
+  auto buffer_coords = new int64_t[2 * update_num];
   void* buffers[] = {buffer_a1, buffer_coords};
-  size_t buffer_sizes[2];
+  uint64_t buffer_sizes[2];
   buffer_sizes[0] = update_num * sizeof(int);
   buffer_sizes[1] = 2 * update_num * sizeof(int64_t);
 
@@ -798,7 +851,12 @@ TEST_CASE_METHOD(DenseArrayFx, "C API: Test random dense updates") {
 
   // Read the entire array back to memory after update
   int* after_update = read_dense_array_2D(
-      domain_0_lo, domain_0_hi, domain_1_lo, domain_1_hi, TILEDB_ARRAY_READ);
+      domain_0_lo,
+      domain_0_hi,
+      domain_1_lo,
+      domain_1_hi,
+      TILEDB_READ,
+      TILEDB_GLOBAL_ORDER);
   REQUIRE(after_update != NULL);
 
   // Compare array before and after

@@ -1,4 +1,3 @@
-
 /**
  * @file   unit-capi-error.cc
  *
@@ -35,13 +34,15 @@
 #include "catch.hpp"
 #include "tiledb.h"
 
-TEST_CASE("C API: Test error and error message") {
+#include <iostream>
+
+TEST_CASE("C API: Test error and error message", "[capi]") {
   tiledb_ctx_t* ctx;
   int rc = tiledb_ctx_create(&ctx);
   CHECK(rc == TILEDB_OK);
 
   const char* bad_path = nullptr;
-  rc = tiledb_clear(ctx, bad_path);
+  rc = tiledb_group_create(ctx, bad_path);
   CHECK(rc == TILEDB_ERR);
 
   tiledb_error_t* err;
@@ -52,9 +53,9 @@ TEST_CASE("C API: Test error and error message") {
   rc = tiledb_error_message(ctx, err, &errmsg);
   CHECK(rc == TILEDB_OK);
   CHECK_THAT(
-      errmsg, Catch::Equals("Error: Invalid directory argument is NULL"));
+      errmsg, Catch::Equals("Error: Invalid group directory argument is NULL"));
 
-  // Clena up
-  tiledb_error_free(err);
+  // Clean up
+  tiledb_error_free(ctx, err);
   tiledb_ctx_free(ctx);
 }

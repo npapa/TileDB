@@ -4,7 +4,8 @@
  * @section LICENSE
  *
  * The MIT License
- * 
+ *
+ * @copyright Copyright (c) 2017 TileDB, Inc.
  * @copyright Copyright (c) 2016 MIT and Intel Corporation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,7 +25,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- * 
+ *
  * @section DESCRIPTION
  *
  * It shows how to clear, delete and move TileDB objects.
@@ -33,11 +34,13 @@
 #include "tiledb.h"
 
 int main() {
+  /* TODO
+
   // Initialize context with the default configuration parameters
   tiledb_ctx_t* ctx;
   tiledb_ctx_create(&ctx);
 
-  // Clear an array
+  // Clear an array_metadata
   tiledb_clear(ctx, "my_group/sparse_arrays/my_array_B");
 
   // Delete a group
@@ -48,6 +51,8 @@ int main() {
 
   // Finalize context
   tiledb_ctx_free(ctx);
+
+  */
 
   return 0;
 }

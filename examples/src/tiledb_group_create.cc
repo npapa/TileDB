@@ -4,7 +4,8 @@
  * @section LICENSE
  *
  * The MIT License
- * 
+ *
+ * @copyright Copyright (c) 2017 TileDB, Inc.
  * @copyright Copyright (c) 2017 MIT, Intel Corporation and TileDB, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,29 +25,33 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- * 
+ *
  * @section DESCRIPTION
  *
- * It creates three groups.
+ * It creates a hierarchical directory structure with three groups:
+ *     my_group
+ *        |_ dense_arrays
+ *        |_ sparse_arrays
+ *
+ * Make sure that no folder with name "my_group" exists in the working
+ * directory before running this example.
  */
 
-#include "tiledb.h"
+#include <tiledb.h>
 
 int main() {
-  // Initialize context with the default configuration parameters
+  // Create context
   tiledb_ctx_t* ctx;
   tiledb_ctx_create(&ctx);
 
   // Create a group
   tiledb_group_create(ctx, "my_group");
 
-  // Create a group in the worskpace
+  // Create two groups inside the first group
   tiledb_group_create(ctx, "my_group/dense_arrays");
-
-  // Create two groups in the worskpace
   tiledb_group_create(ctx, "my_group/sparse_arrays");
 
-  // Finalize context
+  // Clean up
   tiledb_ctx_free(ctx);
 
   return 0;

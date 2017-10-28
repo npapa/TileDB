@@ -34,41 +34,23 @@
 #include "logger.h"
 
 #include <bzlib.h>
-#include <cassert>
-#include <cmath>
-#include <limits>
 
 namespace tiledb {
 
-uint64_t BZip::compress_bound(uint64_t nbytes) {
-  // From the BZip2 documentation:
-  // To guarantee that the compressed data will fit in its buffer, allocate an
-  // output buffer of size 1% larger than the uncompressed data, plus six
-  // hundred extra bytes.
-  float fbytes = ceil(nbytes * 1.01) + 600;
-  assert(fbytes <= std::numeric_limits<size_t>::max());
-  return static_cast<uint64_t>(fbytes);
-}
-
 Status BZip::compress(
-    int level, const Buffer* input_buffer, Buffer* output_buffer) {
+    int level, ConstBuffer* input_buffer, Buffer* output_buffer) {
   // Sanity check
   if (input_buffer->data() == nullptr || output_buffer->data() == nullptr)
     return LOG_STATUS(Status::CompressionError(
         "Failed compressing with BZip; invalid buffer format"));
 
-  // Sanity checks
-  // TODO: put something better than assertions here
-  assert(input_buffer->offset() <= std::numeric_limits<unsigned int>::max());
-  assert(output_buffer->size() <= std::numeric_limits<unsigned int>::max());
-  unsigned int in_size = input_buffer->offset();
-  unsigned int out_size = output_buffer->size();
-
   // Compress
+  auto in_size = (unsigned int)input_buffer->size();
+  auto out_size = (unsigned int)output_buffer->free_space();
   int rc = BZ2_bzBuffToBuffCompress(
-      static_cast<char*>(output_buffer->data()),
+      static_cast<char*>(output_buffer->cur_data()),
       &out_size,
-      static_cast<char*>(input_buffer->data()),
+      (char*)input_buffer->data(),
       in_size,
       level < 1 ? BZip::default_level() : level,  // block size 100k
       0,                                          // verbosity
@@ -98,29 +80,25 @@ Status BZip::compress(
   }
 
   // Set size of compressed data
-  output_buffer->set_offset(out_size);
+  output_buffer->advance_size(out_size);
+  output_buffer->advance_offset(out_size);
 
   return Status::Ok();
 }
 
-Status BZip::decompress(const Buffer* input_buffer, Buffer* output_buffer) {
+Status BZip::decompress(ConstBuffer* input_buffer, Buffer* output_buffer) {
   // Sanity check
   if (input_buffer->data() == nullptr || output_buffer->data() == nullptr)
     return LOG_STATUS(Status::CompressionError(
         "Failed decompressing with BZip; invalid buffer format"));
 
-  // Sanity checks
-  // TODO: put something better than assertions
-  assert(input_buffer->size() <= std::numeric_limits<unsigned int>::max());
-  assert(output_buffer->size() <= std::numeric_limits<unsigned int>::max());
-
   // Decompress
-  unsigned int out_size = output_buffer->size();
+  auto out_size = (unsigned int)output_buffer->free_space();
   int rc = BZ2_bzBuffToBuffDecompress(
-      static_cast<char*>(output_buffer->data()),
+      static_cast<char*>(output_buffer->cur_data()),
       &out_size,
-      static_cast<char*>(input_buffer->data()),
-      input_buffer->size(),
+      (char*)input_buffer->data(),
+      (unsigned int)input_buffer->size(),
       0,   // small bzip data format stream
       0);  // verbositiy
 
@@ -148,7 +126,19 @@ Status BZip::decompress(const Buffer* input_buffer, Buffer* output_buffer) {
     }
   }
 
+  // Set size of compressed data
+  output_buffer->advance_size(out_size);
+  output_buffer->advance_offset(out_size);
+
   return Status::Ok();
+}
+
+uint64_t BZip::overhead(uint64_t nbytes) {
+  // From the BZip2 documentation:
+  // To guarantee that the compressed data will fit in its buffer, allocate an
+  // output buffer of size 1% larger than the uncompressed data, plus six
+  // hundred extra bytes.
+  return static_cast<uint64_t>(ceil(nbytes * 0.01) + 600);
 }
 
 }  // namespace tiledb

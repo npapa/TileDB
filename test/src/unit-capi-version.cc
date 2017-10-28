@@ -35,14 +35,14 @@
 
 #include "catch.hpp"
 
-TEST_CASE("C API: Test version") {
+TEST_CASE("C API: Test version", "[capi]") {
   int major = -1;
   int minor = -1;
   int rev = -1;
 
   tiledb_version(&major, &minor, &rev);
 
-  CHECK(major == 0);
-  CHECK(minor == 6);
-  CHECK(rev == 1);
+  CHECK(major == 1);
+  CHECK(minor == 0);
+  CHECK(rev == 0);
 }
