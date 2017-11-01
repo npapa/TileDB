@@ -45,10 +45,18 @@ target_include_directories(
 )
 
 # Gather the test source files
-file(GLOB_RECURSE TILEDB_TEST_SOURCES "src/unit-*.cc")
-if(USE_HDFS OR USE_HDFS3)
-  file(GLOB_RECURSE TILEDB_TEST_HDFS_SOURCES "src/hdfs-unit-*.cc")
-  set(TILEDB_TEST_SOURCES ${TILEDB_TEST_SOURCES}  ${TILEDB_TEST_HDFS_SOURCES})
+#file(GLOB_RECURSE TILEDB_TEST_SOURCES "src/unit-*.cc")
+#if(USE_HDFS OR USE_HDFS3)
+#  file(GLOB_RECURSE TILEDB_TEST_HDFS_SOURCES "src/hdfs-unit-*.cc")
+#  set(TILEDB_TEST_SOURCES ${TILEDB_TEST_SOURCES}  ${TILEDB_TEST_HDFS_SOURCES})
+#endif()
+file(GLOB_RECURSE TILEDB_TEST_SOURCES "src/s3-unit-*.cc")
+if(USE_S3)
+  set(aws-sdk-cpp_DIR "/home/npapa/aws-sdk-cpp/build/")
+  find_package(aws-sdk-cpp)
+  #include_directories(${LIBAWS_CPP_SDK_S3_INCLUDE_DIR})
+  #set(TILEDB_LIB_DEPENDENCIES ${TILEDB_LIB_DEPENDENCIES} ${AWS_CPP_SDK_S3_LIBRARIES})
+  add_definitions(-DUSE_IMPORT_EXPORT)
 endif()
 
 # unit test executable
@@ -67,7 +75,7 @@ set_target_properties(
 
 target_link_libraries(
   tiledb_unit
-  ${TILEDB_LIB_DEPENDENCIES} -lpthread tiledb_shared
+  ${TILEDB_LIB_DEPENDENCIES} -lpthread tiledb_shared aws-cpp-sdk-s3
 )
 
 target_include_directories(
