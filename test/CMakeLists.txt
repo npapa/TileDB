@@ -52,7 +52,7 @@ target_include_directories(
 #endif()
 file(GLOB_RECURSE TILEDB_TEST_SOURCES "src/s3-unit-*.cc")
 if(USE_S3)
-  set(aws-sdk-cpp_DIR "/home/npapa/aws-sdk-cpp/build/")
+  set(aws-sdk-cpp_DIR $ENV{AWS_SDK_CPP})
   find_package(aws-sdk-cpp)
   #include_directories(${LIBAWS_CPP_SDK_S3_INCLUDE_DIR})
   #set(TILEDB_LIB_DEPENDENCIES ${TILEDB_LIB_DEPENDENCIES} ${AWS_CPP_SDK_S3_LIBRARIES})
