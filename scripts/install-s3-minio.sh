@@ -8,7 +8,7 @@ git clone https://github.com/aws/aws-sdk-cpp.git
 cd aws-sdk-cpp
 mkdir build
 cd build
-export AWS_SDK_CPP==$(pwd)
+export AWS_SDK_CPP=$(pwd)
 #cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_ONLY="s3;core;transfer;config" ..
 make
