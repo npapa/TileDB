@@ -45,18 +45,17 @@ target_include_directories(
 )
 
 # Gather the test source files
-#file(GLOB_RECURSE TILEDB_TEST_SOURCES "src/unit-*.cc")
-#if(USE_HDFS OR USE_HDFS3)
-#  file(GLOB_RECURSE TILEDB_TEST_HDFS_SOURCES "src/hdfs-unit-*.cc")
-#  set(TILEDB_TEST_SOURCES ${TILEDB_TEST_SOURCES}  ${TILEDB_TEST_HDFS_SOURCES})
-#endif()
-file(GLOB_RECURSE TILEDB_TEST_SOURCES "src/s3-unit-*.cc")
+file(GLOB_RECURSE TILEDB_TEST_SOURCES "src/unit-*.cc")
+if(USE_HDFS OR USE_HDFS3)
+  file(GLOB_RECURSE TILEDB_TEST_HDFS_SOURCES "src/hdfs-unit-*.cc")
+  set(TILEDB_TEST_SOURCES ${TILEDB_TEST_SOURCES}  ${TILEDB_TEST_HDFS_SOURCES})
+endif()
 if(USE_S3)
   set(aws-sdk-cpp_DIR $ENV{AWS_SDK_CPP})
   find_package(aws-sdk-cpp)
-  #include_directories(${LIBAWS_CPP_SDK_S3_INCLUDE_DIR})
-  #set(TILEDB_LIB_DEPENDENCIES ${TILEDB_LIB_DEPENDENCIES} ${AWS_CPP_SDK_S3_LIBRARIES})
   add_definitions(-DUSE_IMPORT_EXPORT)
+  file(GLOB_RECURSE TILEDB_TEST_S3_SOURCES "src/s3-unit-*.cc")
+  set(TILEDB_TEST_SOURCES ${TILEDB_TEST_SOURCES}  ${TILEDB_TEST_S3_SOURCES})
 endif()
 
 # unit test executable
