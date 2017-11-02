@@ -74,7 +74,7 @@ set_target_properties(
 
 target_link_libraries(
   tiledb_unit
-  ${TILEDB_LIB_DEPENDENCIES} -lpthread tiledb_shared aws-cpp-sdk-s3
+  ${TILEDB_LIB_DEPENDENCIES} -lpthread tiledb_shared 
 )
 
 target_include_directories(
