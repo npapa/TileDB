@@ -43,5 +43,68 @@ using namespace tiledb;
 
 TEST_CASE("Test S3 filesystem", "[s3]") {
   s3::connect();
-  s3::test();
+  int buffer_size = 5 * 1024 * 1024;
+  auto write_buffer = new char[buffer_size];
+  for (int i = 0; i < buffer_size; i++) {
+    write_buffer[i] = 'a' + (i % 26);
+  }
+  Status st = s3::create_dir(URI("s3://test3/tiledb_test_dir1"));
+  st = s3::create_dir(URI("s3://test3/tiledb_test_dir1/sdf"));
+  st = s3::create_dir(URI("s3://test3/tiledb_test_dir1/sdf/ee"));
+  st = s3::write_to_file(
+      URI("s3://test3/tiledb_test_dir1/sdf/rrrrr"), write_buffer, buffer_size);
+  st = s3::write_to_file(
+      URI("s3://test3/tiledb_test_dir1/sdf/rrrrr"), write_buffer, buffer_size);
+  st = s3::write_to_file(
+      URI("s3://test3/tiledb_test_dir1/sdf/rrrrr"), write_buffer, buffer_size);
+  int buffer_size_small = 1024 * 1024;
+  auto write_buffer_small = new char[buffer_size_small];
+  for (int i = 0; i < buffer_size_small; i++) {
+    write_buffer_small[i] = 'a' + (i % 26);
+  }
+
+  st = s3::write_to_file(
+      URI("s3://test3/tiledb_test_dir1/sdf/rrrrr"),
+      write_buffer_small,
+      buffer_size_small);
+
+  st = s3::write_to_file(
+      URI("s3://test3/tiledb_test_dir1/sdf/e1"), write_buffer, buffer_size);
+
+  st = s3::create_dir(URI("s3://test3/tiledb_test_dir1/sdf1"));
+  st = s3::write_to_file(
+      URI("s3://test3/tiledb_test_dir1/sdf1/rr2"), write_buffer, buffer_size);
+  st = s3::write_to_file(
+      URI("s3://test3/tiledb_test_dir1/sdf1/rr3"), write_buffer, buffer_size);
+  // st =
+  // s3::create_dir(URI("http://s3.us-east-1.amazonaws.com/tiledb_test_dir/sdfsd/vdw"));
+
+  std::vector<std::string> paths;
+  s3::ls(URI("s3://test3/tiledb_test_dir1"), &paths);
+  for (auto path : paths) {
+    std::cout << "File: " << path << std::endl;
+  }
+  std::cout << "Next folder" << std::endl;
+  std::vector<std::string> paths1;
+  s3::ls(URI("s3://test3/tiledb_test_dir1/sdf"), &paths1);
+  for (auto path : paths1) {
+    std::cout << "File: " << path << std::endl;
+  }
+  s3::remove_path(URI("s3://test2/tiledb_test_dir1/sdf1"));
+  std::vector<std::string> paths2;
+  s3::ls(URI("s3://test3/tiledb_test_dir1/sdf1"), &paths2);
+  for (auto path : paths2) {
+    std::cout << "File: " << path << std::endl;
+  }
+  uint64_t nbytes = 0;
+  s3::file_size(URI("s3://test3/tiledb_test_dir1/sdf/ee.dir"), &nbytes);
+  std::cout << "Size: " << nbytes << std::endl;
+  std::cout << s3::is_dir(URI("s3://test3/tiledb_test_dir1/sdf/ee"))
+            << std::endl;
+  std::cout << s3::is_dir(URI("s3://test3/tiledb_test_dir1/sdf/ee1"))
+            << std::endl;
+  //  st = s3::create_dir(URI("s3:///tiledb_test_dir1/et"));
+
+  //  CHECK(st.ok());
+  s3::disconnect();
 }
