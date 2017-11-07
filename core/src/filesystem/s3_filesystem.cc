@@ -77,6 +77,7 @@ using namespace Aws::Utils;
 using namespace Aws;
 
 static const char* DIR_SUFFIX = ".dir";
+static const int TIMEOUT_MAX = 10;
 
 static std::shared_ptr<S3Client> client = nullptr;
 static SDKOptions options;
@@ -100,51 +101,6 @@ namespace tiledb {
 namespace s3 {
 
 #ifdef HAVE_S3
-
-Status test() {
-  // first put an object into s3
-  /*  PutObjectRequest putObjectRequest;
-    putObjectRequest.WithKey(KEY).WithBucket(BUCKET);
-
-    // this can be any arbitrary stream (e.g. fstream, stringstream etc...)
-    auto requestStream = Aws::MakeShared<Aws::StringStream>("s3-sample");
-    *requestStream << "Hello World!";
-
-    // set the stream that will be put to s3
-    putObjectRequest.SetBody(requestStream);
-
-    auto putObjectOutcome = client->PutObject(putObjectRequest);
-
-    if (putObjectOutcome.IsSuccess()) {
-      std::cout << "Put object succeeded" << std::endl;
-    } else {
-      std::cout << "Error while putting Object "
-                << putObjectOutcome.GetError().GetExceptionName() << " "
-                << putObjectOutcome.GetError().GetMessage() << std::endl;
-    }
-
-    // now get the object back out of s3. The response stream can be overridden
-    // here if you want it to go directly to
-    // a file. In this case the default string buf is exactly what we want.
-    GetObjectRequest getObjectRequest;
-    getObjectRequest.WithBucket(BUCKET).WithKey(KEY);
-
-    auto getObjectOutcome = client->GetObject(getObjectRequest);
-
-    if (getObjectOutcome.IsSuccess()) {
-      std::cout << "Successfully retrieved object from s3 with value: "
-                << std::endl;
-      std::cout << getObjectOutcome.GetResult().GetBody().rdbuf() << std::endl
-                << std::endl;
-      ;
-    } else {
-      std::cout << "Error while getting object "
-                << getObjectOutcome.GetError().GetExceptionName() << " "
-                << getObjectOutcome.GetError().GetMessage() << std::endl;
-    }
-  */
-  return Status::Ok();
-}
 
 Status connect() {
   InitAPI(options);
@@ -191,6 +147,96 @@ Status disconnect() {
               << std::endl;
   }
   Aws::ShutdownAPI(options);
+  return Status::Ok();
+}
+
+Status flush_file(const URI& uri){
+  Aws::Http::URI aws_uri = uri.c_str();
+  String path = aws_uri.GetPath();
+  std::string path_c_str = path.c_str();
+    CompletedMultipartUpload completedMultipartUpload =
+        multipartCompleteMultipartUpload[path_c_str];
+
+    std::cout << "Size: " << completedMultipartUpload.GetParts().size()
+              << std::endl;
+
+    CompleteMultipartUploadRequest completeMultipartUploadRequest =
+        multipartCompleteMultipartUploadRequest[path_c_str];
+    completeMultipartUploadRequest.WithMultipartUpload(
+        completedMultipartUpload);
+    CompleteMultipartUploadOutcome completeMultipartUploadOutcome =
+        client->CompleteMultipartUpload(completeMultipartUploadRequest);
+    std::cout << "Success: " << completeMultipartUploadOutcome.IsSuccess()
+              << std::endl;
+    std::cout << "Error: "
+              << completeMultipartUploadOutcome.GetError().GetMessage()
+              << std::endl;
+  return Status::Ok();
+//    std::this_thread::sleep_for(std::chrono::seconds(20));
+//    multipartUploadIDs.erase(path_c_str);
+//    multipartUploadPartNumber.erase(path_c_str);
+    //multipartCompleteMultipartUploadRequest.erase(path_c_str);
+//    multipartCompleteMultipartUpload.erase(path_c_str);
+}
+
+Status create_bucket(const char* bucket) {
+  CreateBucketRequest createBucketRequest;
+  createBucketRequest.SetBucket(bucket);
+  client->CreateBucket(createBucketRequest);
+  return Status::Ok();
+}
+
+void emptyBucket(const Aws::String& bucketName) {
+  ListObjectsRequest listObjectsRequest;
+  listObjectsRequest.SetBucket(bucketName);
+
+  ListObjectsOutcome listObjectsOutcome =
+      client->ListObjects(listObjectsRequest);
+
+  if (!listObjectsOutcome.IsSuccess())
+    return;
+
+  for (const auto& object : listObjectsOutcome.GetResult().GetContents()) {
+    DeleteObjectRequest deleteObjectRequest;
+    deleteObjectRequest.SetBucket(bucketName);
+    deleteObjectRequest.SetKey(object.GetKey());
+    client->DeleteObject(deleteObjectRequest);
+  }
+}
+
+void waitForBucketToEmpty(const Aws::String& bucketName) {
+  ListObjectsRequest listObjectsRequest;
+  listObjectsRequest.SetBucket(bucketName);
+
+  unsigned checkForObjectsCount = 0;
+  while (checkForObjectsCount++ < TIMEOUT_MAX) {
+    ListObjectsOutcome listObjectsOutcome =
+        client->ListObjects(listObjectsRequest);
+
+    if (listObjectsOutcome.GetResult().GetContents().size() > 0) {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+    } else {
+      break;
+    }
+  }
+}
+
+Status delete_bucket(const char* bucket) {
+  HeadBucketRequest headBucketRequest;
+  headBucketRequest.SetBucket(bucket);
+  HeadBucketOutcome bucketOutcome = client->HeadBucket(headBucketRequest);
+
+  if (bucketOutcome.IsSuccess()) {
+    emptyBucket(bucket);
+    waitForBucketToEmpty(bucket);
+
+    DeleteBucketRequest deleteBucketRequest;
+    deleteBucketRequest.SetBucket(bucket);
+
+    DeleteBucketOutcome deleteBucketOutcome =
+        client->DeleteBucket(deleteBucketRequest);
+  }  
+  return Status::Ok();
 }
 
 Status create_dir(const URI& uri) {
@@ -216,6 +262,7 @@ Status create_dir(const URI& uri) {
   }
   return Status::Ok();
 }
+
 bool is_dir(const URI& uri) {
   Aws::Http::URI aws_uri = uri.to_path().c_str();
   ListObjectsRequest listObjectsRequest;
@@ -233,9 +280,11 @@ bool is_dir(const URI& uri) {
     return true;
   return false;
 }
+
 Status move_path(const URI& old_uri, const URI& new_uri) {
   return Status::Ok();
 }
+
 bool is_file(const URI& uri) {
   Aws::Http::URI aws_uri = uri.to_path().c_str();
   ListObjectsRequest listObjectsRequest;
@@ -253,6 +302,7 @@ bool is_file(const URI& uri) {
     return true;
   return false;
 }
+
 Status create_file(const URI& uri) {
   Aws::Http::URI aws_uri = uri.c_str();
   PutObjectRequest putObjectRequest;
@@ -276,6 +326,7 @@ Status create_file(const URI& uri) {
   }
   return Status::Ok();
 }
+
 Status remove_file(const URI& uri) {
   Aws::Http::URI aws_uri = uri.to_path().c_str();
   ListObjectsRequest listObjectsRequest;
@@ -299,6 +350,7 @@ Status remove_file(const URI& uri) {
   }
   return Status::Ok();
 }
+
 Status remove_path(const URI& uri) {
   Aws::Http::URI aws_uri = uri.to_path().c_str();
   ListObjectsRequest listObjectsRequest;
@@ -319,32 +371,34 @@ Status remove_path(const URI& uri) {
   }
   return Status::Ok();
 }
+
 Status read_from_file(
     const URI& uri, off_t offset, void* buffer, uint64_t length) {
-    Aws::Http::URI aws_uri = uri.c_str();
-    GetObjectRequest getObjectRequest;
-    getObjectRequest.WithBucket(aws_uri.GetAuthority()).WithKey(aws_uri.GetPath());
-    getObjectRequest.SetResponseStreamFactory(
-            [buffer, length]()
-            {
-                std::unique_ptr<Aws::StringStream>
-                        stream(Aws::New<Aws::StringStream>("alloc"));
+  Aws::Http::URI aws_uri = uri.c_str();
+  GetObjectRequest getObjectRequest;
+  getObjectRequest.WithBucket(aws_uri.GetAuthority())
+      .WithKey(aws_uri.GetPath());
+  getObjectRequest.SetRange(("bytes="+std::to_string(offset)+"-"+std::to_string(offset+length)).c_str());
+  std::cout<<"Range: " << getObjectRequest.GetRange()<<std::endl;  
+  getObjectRequest.SetResponseStreamFactory([buffer, length]() {
+    std::unique_ptr<Aws::StringStream> stream(
+        Aws::New<Aws::StringStream>("alloc1"));
 
-                stream->rdbuf()->pubsetbuf(static_cast<char*>(buffer),
-                                           length);
+    stream->rdbuf()->pubsetbuf(static_cast<char*>(buffer), length);
 
-                return stream.release();
-            });
+    return stream.release();
+  });
 
-    auto getObjectOutcome = client->GetObject(getObjectRequest);
+  auto getObjectOutcome = client->GetObject(getObjectRequest);
 
-    if (!getObjectOutcome.IsSuccess()) {
-      std::cout << "Error while getting object "
-                << getObjectOutcome.GetError().GetExceptionName() << " "
-                << getObjectOutcome.GetError().GetMessage() << std::endl;
-    }
+  if (!getObjectOutcome.IsSuccess()) {
+    std::cout << "Error while getting object "
+              << getObjectOutcome.GetError().GetExceptionName() << " "
+              << getObjectOutcome.GetError().GetMessage() << std::endl;
+  }
   return Status::Ok();
 }
+
 Status write_to_file(
     const URI& uri, const void* buffer, const uint64_t length) {
   Aws::Http::URI aws_uri = uri.c_str();
@@ -402,6 +456,7 @@ Status write_to_file(
 
   return Status::Ok();
 }
+
 Status ls(const URI& uri, std::vector<std::string>* paths) {
   Aws::Http::URI aws_uri = (uri.to_path() + std::string("/")).c_str();
   ListObjectsRequest listObjectsRequest;

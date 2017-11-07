@@ -36,8 +36,6 @@
 #ifdef HAVE_S3
 #include <aws/s3/S3Client.h>
 
-using namespace Aws::S3;
-using namespace Aws::S3::Model;
 
 #include <sys/types.h>
 #include <string>
@@ -54,7 +52,6 @@ namespace tiledb {
 namespace s3 {
 
 #ifdef HAVE_S3
-Status test();
 /**
  * Creates a S3 client
  *
@@ -68,6 +65,22 @@ Status connect();
  * @return Status
  */
 Status disconnect();
+
+/**
+ * Creates a bucket.
+ *
+ * @param bucket The name of the bucket to be created.
+ * @return Status
+ */
+Status create_bucket(const char* bucket);
+
+/**
+ * Deletes a bucket.
+ *
+ * @param bucket The name of the bucket to be deleted.
+ * @return Status
+ */
+Status delete_bucket(const char* bucket);
 
 /**
  * Creates a new directory.
@@ -109,6 +122,14 @@ bool is_file(const URI& uri);
  * @return Status
  */
 Status create_file(const URI& uri);
+
+/**
+ * Flushes a file to s3.
+ *
+ * @param uri The URI of the object to be flushed.
+ * @return Status
+ */
+Status flush_file(const URI& uri);
 
 /**
  * Delete a file with a given URI.
